@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Wg9-XE-GMi">
+    <device id="ipad9_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="Ja7-Xi-pkk">
+            <objects>
+                <viewController id="Wg9-XE-GMi" customClass="ViewController" customModule="OverviewDetailCombo" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Atl-SF-eoL">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KOK-tz-EX4" customClass="SplitterView" customModule="OverviewDetailCombo" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="511" width="768" height="2"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="2" id="ZpJ-Gt-xWl"/>
+                                </constraints>
+                                <connections>
+                                    <outlet property="splitterPosition" destination="y60-KT-e56" id="LHi-nS-Lia"/>
+                                    <outlet property="touchView" destination="vvH-co-JHy" id="as7-Ku-vuh"/>
+                                </connections>
+                            </view>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="BWP-4r-QB2">
+                                <rect key="frame" x="0.0" y="20" width="768" height="491"/>
+                            </mapView>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="to2-Ab-jZO">
+                                <rect key="frame" x="0.0" y="513" width="768" height="511"/>
+                            </mapView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vvH-co-JHy" customClass="TouchView" customModule="OverviewDetailCombo" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="492" width="768" height="40"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="Iji-R4-brN"/>
+                                </constraints>
+                                <connections>
+                                    <outlet property="splitter" destination="KOK-tz-EX4" id="3QF-PJ-lMr"/>
+                                </connections>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="vvH-co-JHy" firstAttribute="leading" secondItem="pzk-C2-9ka" secondAttribute="leading" id="BQ2-Fp-Mf7"/>
+                            <constraint firstItem="KOK-tz-EX4" firstAttribute="leading" secondItem="pzk-C2-9ka" secondAttribute="leading" id="FMY-Lv-uf8"/>
+                            <constraint firstItem="to2-Ab-jZO" firstAttribute="leading" secondItem="pzk-C2-9ka" secondAttribute="leading" id="Jla-jU-oA2"/>
+                            <constraint firstItem="BWP-4r-QB2" firstAttribute="leading" secondItem="pzk-C2-9ka" secondAttribute="leading" id="NCg-Is-ZBo"/>
+                            <constraint firstItem="to2-Ab-jZO" firstAttribute="top" secondItem="KOK-tz-EX4" secondAttribute="bottom" id="XMv-Ub-WiT"/>
+                            <constraint firstItem="BWP-4r-QB2" firstAttribute="top" secondItem="pzk-C2-9ka" secondAttribute="top" id="YyC-aH-5md"/>
+                            <constraint firstItem="pzk-C2-9ka" firstAttribute="bottom" secondItem="to2-Ab-jZO" secondAttribute="bottom" id="bfX-uP-atZ"/>
+                            <constraint firstItem="pzk-C2-9ka" firstAttribute="trailing" secondItem="BWP-4r-QB2" secondAttribute="trailing" id="dQN-wE-TqB"/>
+                            <constraint firstItem="vvH-co-JHy" firstAttribute="centerY" secondItem="KOK-tz-EX4" secondAttribute="centerY" id="e9Q-KF-P4d"/>
+                            <constraint firstItem="pzk-C2-9ka" firstAttribute="trailing" secondItem="vvH-co-JHy" secondAttribute="trailing" id="ijM-xj-IEg"/>
+                            <constraint firstItem="pzk-C2-9ka" firstAttribute="trailing" secondItem="to2-Ab-jZO" secondAttribute="trailing" id="nMn-sm-hgP"/>
+                            <constraint firstItem="KOK-tz-EX4" firstAttribute="top" secondItem="BWP-4r-QB2" secondAttribute="bottom" id="rln-4d-FDp"/>
+                            <constraint firstItem="KOK-tz-EX4" firstAttribute="centerY" secondItem="Atl-SF-eoL" secondAttribute="centerY" id="y60-KT-e56"/>
+                            <constraint firstItem="pzk-C2-9ka" firstAttribute="trailing" secondItem="KOK-tz-EX4" secondAttribute="trailing" id="yeX-gf-cUO"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="pzk-C2-9ka"/>
+                    </view>
+                    <connections>
+                        <outlet property="detailMap" destination="to2-Ab-jZO" id="GBv-zw-6hx"/>
+                        <outlet property="overviewMap" destination="BWP-4r-QB2" id="Uwc-AR-j75"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="qzv-TS-63z" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-864" y="-552"/>
+        </scene>
+    </scenes>
+</document>
