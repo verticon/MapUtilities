@@ -17,24 +17,32 @@ class SplitterView: UIView {
 
     static let thickness: CGFloat = 2 // Height in potrait or width in landscape
 
-
     // The magnitude of the offset remains the same in portrait of in landscape; the splitter is always
     // moving through the longer dimension (y in portrait, x in landscape). The sign (+/-) might, however,
     // change when the orientation changes.
     private var centerConstraintConstant: CGFloat = 0
 
-    // We need the superview in order to complete the initializations; so we wait for it.
-    init(touchView: TouchView) {
+    private let touchView = TouchView()
+
+    init() {
         super.init(frame: CGRect.zero)
 
+        // The touch view needs to be on top
+        touchView.translatesAutoresizingMaskIntoConstraints = false
         touchView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(panGestureHandler(_:))))
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // Reposition the slider; either top to bottom, or left to right.
+
+    override func didMoveToSuperview() {
+        superview?.addSubview(touchView)
+    }
+
+    // ****************************************************************************************************************
+
+    // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
     private var initialConstant: CGFloat!
     @objc func panGestureHandler(_ recognizer: UIPanGestureRecognizer) {
 
@@ -60,9 +68,32 @@ class SplitterView: UIView {
         }
     }
 
+    // ****************************************************************************************************************
+
+    private var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
+    private lazy var potraitConstraints: [NSLayoutConstraint] = [
+        touchView.leftAnchor.constraint(equalTo: self.leftAnchor),
+        touchView.rightAnchor.constraint(equalTo: self.rightAnchor),
+        touchView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+        touchView.heightAnchor.constraint(equalToConstant: TouchView.thickness),
+    ]
+    private lazy var landscapeRightConstraints: [NSLayoutConstraint] = [
+        touchView.topAnchor.constraint(equalTo: self.topAnchor),
+        touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+        touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+    ]
+    private lazy var landscapeLeftConstraints: [NSLayoutConstraint] = [
+        touchView.topAnchor.constraint(equalTo: self.topAnchor),
+        touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+        touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+    ]
+
+    private var currentOrientation: UIDeviceOrientation?
+
     // This method assumes that new splitter constraints (i.e. those
     // appropriate to the new orientation) have already been put in place.
-    private var currentOrientation: UIDeviceOrientation?
     func adapt(to newOrientation: UIDeviceOrientation) {
 
         // Determine whether, in the new orientation, the constaint's offset from the center is positive or negative.
@@ -70,20 +101,44 @@ class SplitterView: UIView {
         // value of its center constarint's constant would be negative (i.e. in the -y direction). To achieve
         // the same relative position in a landscape right orientation would require the splitter to be moved
         // to the right using a positive value for the constraint's constant (i.e. in the +x direction).
-        let wasNegative = centerConstraintConstant < 0
-        var isNegative = wasNegative
-        switch currentOrientation {
-        case .portrait: fallthrough
-        case .landscapeLeft: if newOrientation == .landscapeRight { isNegative = !wasNegative }
-        case .landscapeRight: isNegative = !wasNegative
-        default: break
+        func updateSign() {
+            let wasNegative = centerConstraintConstant < 0
+            var isNegative = wasNegative
+            switch currentOrientation {
+            case .portrait: fallthrough
+            case .landscapeLeft: if newOrientation == .landscapeRight { isNegative = !wasNegative }
+            case .landscapeRight: isNegative = !wasNegative
+            default: break
+            }
+            centerConstraintConstant = (isNegative ? -1 : 1) * abs(centerConstraintConstant)
+
+            getCenterConstraint().constant = centerConstraintConstant
         }
-        centerConstraintConstant = (isNegative ? -1 : 1) * abs(centerConstraintConstant)
 
-        getCenterConstraint().constant = centerConstraintConstant
+        func updateConstraints() {
+            if let current = currentConstraints {
+                NSLayoutConstraint.deactivate(current)
+                currentConstraints = nil
+            }
 
+            switch newOrientation {
+            case .portrait: currentConstraints = potraitConstraints
+            case .landscapeLeft: currentConstraints = landscapeLeftConstraints
+            case .landscapeRight: currentConstraints = landscapeRightConstraints
+            default: return
+            }
+
+            NSLayoutConstraint.activate(currentConstraints!)
+        }
+
+        updateSign()
+        updateConstraints()
         currentOrientation = newOrientation
+
+        touchView.adapt(to: newOrientation)
     }
+
+    // ****************************************************************************************************************
 
     private func getCenterConstraint() -> NSLayoutConstraint {
         for constraint in superview!.constraints {
@@ -96,7 +151,11 @@ class SplitterView: UIView {
 
 }
 
-class TouchView : UIView {
+// We want the splitter view to be thin. This makes it difficult to touch.
+// So, we use a transparant view that is constrained to be centered on the
+// splitter, is thicker, and detects the touches. When the splitter is moved
+// the touch view moves with it.
+private class TouchView : UIView {
 
     static let thickness: CGFloat = 40 // Height in potrait or width in landscape
 

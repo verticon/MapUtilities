@@ -14,11 +14,6 @@ class ViewController: UIViewController {
 
     private let mapA = MapView()
     private var splitter: SplitterView!
-    // We want the splitter view to be thin. This makes it difficult to touch.
-    // So, we use a transparant view that is constrained to be centered on the
-    // splitter, is thicker, and detects the touches. When the splitter is moved
-    // the touch view moves with it.
-    private let touchView = TouchView()
     private let mapB = MapView()
     private let toolBar = ToolBar()
 
@@ -34,11 +29,6 @@ class ViewController: UIViewController {
         splitter.rightAnchor.constraint(equalTo: view.rightAnchor),
         splitter.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         splitter.heightAnchor.constraint(equalToConstant: SplitterView.thickness),
-
-        touchView.leftAnchor.constraint(equalTo: splitter.leftAnchor),
-        touchView.rightAnchor.constraint(equalTo: splitter.rightAnchor),
-        touchView.centerYAnchor.constraint(equalTo: splitter.centerYAnchor),
-        touchView.heightAnchor.constraint(equalToConstant: TouchView.thickness),
 
         mapB.topAnchor.constraint(equalTo: splitter.bottomAnchor),
         mapB.rightAnchor.constraint(equalTo: view.rightAnchor),
@@ -61,11 +51,6 @@ class ViewController: UIViewController {
         splitter.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-        touchView.topAnchor.constraint(equalTo: splitter.topAnchor),
-        touchView.bottomAnchor.constraint(equalTo: splitter.bottomAnchor),
-        touchView.centerXAnchor.constraint(equalTo: splitter.centerXAnchor),
-        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-
         mapB.topAnchor.constraint(equalTo: view.topAnchor),
         mapB.rightAnchor.constraint(equalTo: splitter.leftAnchor),
         mapB.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -87,11 +72,6 @@ class ViewController: UIViewController {
         splitter.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-        touchView.topAnchor.constraint(equalTo: splitter.topAnchor),
-        touchView.bottomAnchor.constraint(equalTo: splitter.bottomAnchor),
-        touchView.centerXAnchor.constraint(equalTo: splitter.centerXAnchor),
-        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-
         mapB.topAnchor.constraint(equalTo: view.topAnchor),
         mapB.rightAnchor.constraint(equalTo: view.rightAnchor),
         mapB.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -112,7 +92,7 @@ class ViewController: UIViewController {
         mapA.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(mapA)
 
-        splitter = SplitterView(touchView: touchView)
+        splitter = SplitterView()
         splitter.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(splitter)
 
@@ -121,10 +101,6 @@ class ViewController: UIViewController {
 
         toolBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(toolBar)
-
-        // The touch view needs to be on top
-        touchView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(touchView)
 
         if let currentLocation = UserLocation.instance.currentLocation?.coordinate {
             let initialSpan: CLLocationDistance = 10000
@@ -178,8 +154,11 @@ class ViewController: UIViewController {
             NSLayoutConstraint.activate(currentConstraints)
 
             splitter.adapt(to: UIDevice.current.orientation)
-            touchView.adapt(to: UIDevice.current.orientation)
         }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { toolBar.setNeedsDisplay() }
     }
 
     private func printInfo() {
