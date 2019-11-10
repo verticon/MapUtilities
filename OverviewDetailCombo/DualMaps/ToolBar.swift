@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ToolBar: UIView {
+class ToolBar: UIStackView {
 
     let width: CGFloat = 20
     let height: CGFloat
@@ -20,8 +20,6 @@ class ToolBar: UIView {
             let shape = CAShapeLayer.init()
             shape.frame = frame
             shape.path = path.cgPath
-            shape.fillColor = UIColor.lightGray.cgColor
-            shape.opacity = 0.5
             shape.masksToBounds = true
             return shape
         }
@@ -43,19 +41,34 @@ class ToolBar: UIView {
         let shape = makeShape(with: self.bounds)
         self.layer.insertSublayer(shape, at: 0)
         addShadow(to: self, using: shape.path!)
+
+        self.axis = .vertical
+
+        var button = UIButton(type: .system)
+        button.setTitle("1", for: .normal)
+        self.addArrangedSubview(button)
+        button = UIButton(type: .system)
+        button.setTitle("2", for: .normal)
+        self.addArrangedSubview(button)
+        button = UIButton(type: .system)
+        button.setTitle("3", for: .normal)
+        self.addArrangedSubview(button)
     }
     
-    required init?(coder: NSCoder) {
+    required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 
-    /*
-    // Only override draw() if you perform custom drawing.
-    // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
-        // Drawing code
-    }
-    */
+        guard let shape = self.layer.sublayers?[0] as? CAShapeLayer else { fatalError("No shape layer???") }
+        
+        switch self.traitCollection.userInterfaceStyle {
+        case .dark:
+            shape.fillColor = UIColor.lightGray.cgColor
+        default:
+            shape.fillColor = UIColor.white.cgColor
+        }
 
+        shape.opacity = 0.5
+    }
 }
