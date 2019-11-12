@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:/Users/Robert/Development/Apple/iOS/Maps/OverviewDetailCombo/DualMaps.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "container:/Users/Robert/Development/Apple/iOS/Maps/UserTrackingPolyline.xcodeproj">
    </FileRef>
    <FileRef
