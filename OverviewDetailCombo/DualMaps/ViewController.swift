@@ -129,7 +129,7 @@ class ViewController: UIViewController {
             self.currentConstraints = nil // The new constraints will be set in viewDidLayoutSubviews(); see the comments there.
 
             // When the device's orientation changes between portrait, landscape left, and landscape right iOS performs
-            // view layout (viewDidLayoutSubviews() is called). However, iwhen the devices passes through the upside down
+            // view layout (viewDidLayoutSubviews() is called). However, when the device passes through the upside down
             // position, on its way to landscape left or lanscape right, then layout does not occur (tested on iOS 13).
             self.view.setNeedsLayout()
         }

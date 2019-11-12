@@ -40,104 +40,131 @@ class SplitterView: UIView {
         superview?.addSubview(touchView)
     }
 
-    // ****************************************************************************************************************
+    // Note: The following two closures, handler and adapter, each "capture" (close over) a set of variables.
+    // These variables might have otherwise been implemented as member properties of the Splitter class. Closures
+    // are used so as to limit the scop of those variables to the single code block that needs to access them.
+    // Question: Is there a cost to using this scoping technique?
 
+
+    // ****************************************************************************************************************
     // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
-    private var initialConstant: CGFloat!
-    @objc func panGestureHandler(_ recognizer: UIPanGestureRecognizer) {
-
-        switch recognizer.state {
-        case .began:
-            initialConstant = centerConstraintConstant
-
-        case .changed:
-            let centerConstraint = getCenterConstraint()
-
-            // The recognizer reports the current, total delta since the beginning of the pan gesture
-            let panGestureDelta = recognizer.translation(in: self.superview)
-            let newConstant = initialConstant + (centerConstraint.firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
-
-            // Whether in potrait or in landscape we are operating off of the maximum dimension.
-            let maxDimension = UIScreen.main.bounds.height > UIScreen.main.bounds.width  ? UIScreen.main.bounds.height : UIScreen.main.bounds.width
-            let maxOffset = maxDimension/2 - TouchView.thickness
-
-            centerConstraintConstant = abs(newConstant) < maxOffset ? newConstant : (newConstant > 0 ? maxOffset : -maxOffset)
-            centerConstraint.constant = centerConstraintConstant
-
-        default: break
-        }
-    }
-
     // ****************************************************************************************************************
 
-    private var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
-    private lazy var potraitConstraints: [NSLayoutConstraint] = [
-        touchView.leftAnchor.constraint(equalTo: self.leftAnchor),
-        touchView.rightAnchor.constraint(equalTo: self.rightAnchor),
-        touchView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-        touchView.heightAnchor.constraint(equalToConstant: TouchView.thickness),
-    ]
-    private lazy var landscapeRightConstraints: [NSLayoutConstraint] = [
-        touchView.topAnchor.constraint(equalTo: self.topAnchor),
-        touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-        touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-    ]
-    private lazy var landscapeLeftConstraints: [NSLayoutConstraint] = [
-        touchView.topAnchor.constraint(equalTo: self.topAnchor),
-        touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-        touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-        touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-    ]
+    private lazy var handler: (UIPanGestureRecognizer) -> Void = {
 
-    private var currentOrientation: UIDeviceOrientation?
+        var initialConstant: CGFloat!
 
-    // This method assumes that new splitter constraints (i.e. those
-    // appropriate to the new orientation) have already been put in place.
-    func adapt(to newOrientation: UIDeviceOrientation) {
+        return { recognizer in
+            
+            switch recognizer.state {
+            case .began:
+                initialConstant = self.centerConstraintConstant
 
-        // Determine whether, in the new orientation, the constaint's offset from the center is positive or negative.
-        // Example: If the old orientation was potrait and the splitter had been moved toward the top then the
-        // value of its center constarint's constant would be negative (i.e. in the -y direction). To achieve
-        // the same relative position in a landscape right orientation would require the splitter to be moved
-        // to the right using a positive value for the constraint's constant (i.e. in the +x direction).
-        func updateSign() {
-            let wasNegative = centerConstraintConstant < 0
-            var isNegative = wasNegative
-            switch currentOrientation {
-            case .portrait: fallthrough
-            case .landscapeLeft: if newOrientation == .landscapeRight { isNegative = !wasNegative }
-            case .landscapeRight: isNegative = !wasNegative
+            case .changed:
+                let centerConstraint = self.getCenterConstraint()
+
+                // The recognizer reports the current, total delta since the beginning of the pan gesture
+                let panGestureDelta = recognizer.translation(in: self.superview)
+                let newConstant = initialConstant + (centerConstraint.firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
+
+                // Whether in potrait or in landscape we are operating off of the maximum dimension.
+                let maxDimension = UIScreen.main.bounds.height > UIScreen.main.bounds.width  ? UIScreen.main.bounds.height : UIScreen.main.bounds.width
+                let maxOffset = maxDimension/2 - TouchView.thickness
+
+                self.centerConstraintConstant = abs(newConstant) < maxOffset ? newConstant : (newConstant > 0 ? maxOffset : -maxOffset)
+                centerConstraint.constant = self.centerConstraintConstant
+
             default: break
             }
-            centerConstraintConstant = (isNegative ? -1 : 1) * abs(centerConstraintConstant)
-
-            getCenterConstraint().constant = centerConstraintConstant
         }
+    }()
+    @objc private func panGestureHandler(_ recognizer: UIPanGestureRecognizer) { handler(recognizer) }
 
-        func updateConstraints() {
-            if let current = currentConstraints {
-                NSLayoutConstraint.deactivate(current)
-                currentConstraints = nil
+    // ****************************************************************************************************************
+    // Adapt the splitter to the new orientation. It is assumed that new splitter constraints
+    // (i.e. those appropriate to the new orientation) have already been put in place.
+    // ****************************************************************************************************************
+
+    private lazy var adapter: ((UIDeviceOrientation) -> Void)! = {
+
+        // The TouchView class is a part of the Splitter's implementation: its existence does not need to be known externally.
+        // BUT, we need it to be on top so that it can be touched This Z ordering would normally be handled by the code that
+        // is adding views to the root view. We do it here. It only happens once. It feels kludgey. Sigh ...
+        self.superview?.bringSubviewToFront(self.touchView)
+
+
+        var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
+        var potraitConstraints: [NSLayoutConstraint] = [
+            self.touchView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            self.touchView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            self.touchView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            self.touchView.heightAnchor.constraint(equalToConstant: TouchView.thickness),
+        ]
+        var landscapeRightConstraints: [NSLayoutConstraint] = [
+            self.touchView.topAnchor.constraint(equalTo: self.topAnchor),
+            self.touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            self.touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+        ]
+        var landscapeLeftConstraints: [NSLayoutConstraint] = [
+            self.touchView.topAnchor.constraint(equalTo: self.topAnchor),
+            self.touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            self.touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+        ]
+
+        var currentOrientation: UIDeviceOrientation?
+
+
+        return { newOrientation in
+            // Determine whether, in the new orientation, the constaint's offset from the center is positive or negative.
+            // Example: If the old orientation was potrait and the splitter had been moved toward the top then the
+            // value of its center constarint's constant would be negative (i.e. in the -y direction). To achieve
+            // the same relative position in a landscape right orientation would require the splitter to be moved
+            // to the right using a positive value for the constraint's constant (i.e. in the +x direction).
+            func updateSign() {
+                let wasNegative = self.centerConstraintConstant < 0
+                var isNegative = wasNegative
+                switch currentOrientation {
+                case .portrait: fallthrough
+                case .landscapeLeft: if newOrientation == .landscapeRight { isNegative = !wasNegative }
+                case .landscapeRight: isNegative = !wasNegative
+                default: break
+                }
+                self.centerConstraintConstant = (isNegative ? -1 : 1) * abs(self.centerConstraintConstant)
+
+                self.getCenterConstraint().constant = self.centerConstraintConstant
             }
 
-            switch newOrientation {
-            case .portrait: currentConstraints = potraitConstraints
-            case .landscapeLeft: currentConstraints = landscapeLeftConstraints
-            case .landscapeRight: currentConstraints = landscapeRightConstraints
-            default: return
+            func updateConstraints() {
+                if let current = currentConstraints {
+                    NSLayoutConstraint.deactivate(current)
+                    currentConstraints = nil
+                }
+
+                switch newOrientation {
+                case .portrait: currentConstraints = potraitConstraints
+                case .landscapeLeft: currentConstraints = landscapeLeftConstraints
+                case .landscapeRight: currentConstraints = landscapeRightConstraints
+                default: return
+                }
+
+                NSLayoutConstraint.activate(currentConstraints!)
             }
 
-            NSLayoutConstraint.activate(currentConstraints!)
+            updateConstraints()
+            updateSign()
+            currentOrientation = newOrientation
+
+            self.touchView.adapt(to: newOrientation)
         }
-
-        updateSign()
-        updateConstraints()
-        currentOrientation = newOrientation
-
-        touchView.adapt(to: newOrientation)
+    }()
+    func adapt(to newOrientation: UIDeviceOrientation) {
+        adapter(newOrientation)
     }
 
+    // ****************************************************************************************************************
+    // Utilities
     // ****************************************************************************************************************
 
     private func getCenterConstraint() -> NSLayoutConstraint {
@@ -148,7 +175,6 @@ class SplitterView: UIView {
         }
         fatalError("No center constraint???")
     }
-
 }
 
 // We want the splitter view to be thin. This makes it difficult to touch.
