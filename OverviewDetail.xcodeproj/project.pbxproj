@@ -12,7 +12,26 @@
 		E1A831EC237AF2E900DAE8CE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* ViewController.swift */; };
 		E1A831F1237AF2EA00DAE8CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */; };
 		E1A831F4237AF2EA00DAE8CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */; };
+		E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A338237B11C600977F7C /* SplitterView.swift */; };
+		E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A339237B11C600977F7C /* ToolBar.swift */; };
+		E1F8A33D237B11C600977F7C /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A33A237B11C600977F7C /* MapView.swift */; };
+		E1F8A340237B136000977F7C /* VerticonsToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */; };
+		E1F8A341237B136000977F7C /* VerticonsToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E1F8A342237B136000977F7C /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E1F8A341237B136000977F7C /* VerticonsToolbox.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		E1A831E4237AF2E900DAE8CE /* OverviewDetail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OverviewDetail.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -22,6 +41,10 @@
 		E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E1A831F3237AF2EA00DAE8CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E1A831F5237AF2EA00DAE8CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E1F8A338237B11C600977F7C /* SplitterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplitterView.swift; sourceTree = "<group>"; };
+		E1F8A339237B11C600977F7C /* ToolBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolBar.swift; sourceTree = "<group>"; };
+		E1F8A33A237B11C600977F7C /* MapView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = VerticonsToolbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1F8A340237B136000977F7C /* VerticonsToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +64,7 @@
 			children = (
 				E1A831E6237AF2E900DAE8CE /* OverviewDetail */,
 				E1A831E5237AF2E900DAE8CE /* Products */,
+				E1F8A33E237B136000977F7C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -54,6 +79,9 @@
 		E1A831E6237AF2E900DAE8CE /* OverviewDetail */ = {
 			isa = PBXGroup;
 			children = (
+				E1F8A33A237B11C600977F7C /* MapView.swift */,
+				E1F8A338237B11C600977F7C /* SplitterView.swift */,
+				E1F8A339237B11C600977F7C /* ToolBar.swift */,
 				E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */,
 				E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */,
 				E1A831EB237AF2E900DAE8CE /* ViewController.swift */,
@@ -62,6 +90,14 @@
 				E1A831F5237AF2EA00DAE8CE /* Info.plist */,
 			);
 			path = OverviewDetail;
+			sourceTree = "<group>";
+		};
+		E1F8A33E237B136000977F7C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -74,6 +110,7 @@
 				E1A831E0237AF2E900DAE8CE /* Sources */,
 				E1A831E1237AF2E900DAE8CE /* Frameworks */,
 				E1A831E2237AF2E900DAE8CE /* Resources */,
+				E1F8A342237B136000977F7C /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -135,8 +172,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1A831EC237AF2E900DAE8CE /* ViewController.swift in Sources */,
+				E1F8A33D237B11C600977F7C /* MapView.swift in Sources */,
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
+				E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
+				E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
