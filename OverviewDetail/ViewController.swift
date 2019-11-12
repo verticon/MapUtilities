@@ -102,13 +102,7 @@ class ViewController: UIViewController {
         toolBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(toolBar)
 
-        if let currentLocation = UserLocation.instance.currentLocation?.coordinate {
-            let initialSpan: CLLocationDistance = 10000
-            mapB.region = MKCoordinateRegion(center: currentLocation, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
-            mapA.region = MKCoordinateRegion(center: currentLocation, latitudinalMeters: 10 * initialSpan, longitudinalMeters: 10 * initialSpan)
-        }
-        else { print("Cannot get current location") }
-
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: ViewController.userLocationEventHandler)
 
         var previousOrientation: UIDeviceOrientation?
         NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { notification in
@@ -161,15 +155,25 @@ class ViewController: UIViewController {
         if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { toolBar.setNeedsDisplay() }
     }
 
-    private func printInfo() {
-        func orientation() -> String {
-            switch UIDevice.current.orientation {
-            case .portrait: return "Portrait"
-            case .landscapeRight: return "LandscapeRight"
-            case .landscapeLeft: return "LandscapeLeft"
-            default: return "Unsupported"
+    private func userLocationEventHandler(event: UserLocationEvent) {
+
+        switch event {
+
+        case .authorizationUpdate(let authorization):
+            switch authorization {
+            case .authorizedAlways: fallthrough
+            case .authorizedWhenInUse:
+                guard let currentLocation = UserLocation.instance.currentLocation?.coordinate else { fatalError("No current location?") }
+                let initialSpan: CLLocationDistance = 10000
+                mapB.region = MKCoordinateRegion(center: currentLocation, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
+                mapA.region = MKCoordinateRegion(center: currentLocation, latitudinalMeters: 10 * initialSpan, longitudinalMeters: 10 * initialSpan)
+
+            default:
+                alertUser(title: "Location Access Not Authorized", body: "\(applicationName) will not be able to provide location related functionality.")
             }
+
+        default: break
+
         }
-        print("Orientation: \(orientation()), View: W \(view.bounds.width), H \(view.bounds.height) ")
     }
 }
