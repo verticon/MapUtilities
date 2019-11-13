@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E14F1C77237C212600FF3E03 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F1C76237C212600FF3E03 /* ViewController.swift */; };
 		E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */; };
 		E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */; };
-		E1A831EC237AF2E900DAE8CE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* ViewController.swift */; };
+		E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */; };
 		E1A831F1237AF2EA00DAE8CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */; };
 		E1A831F4237AF2EA00DAE8CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */; };
 		E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A338237B11C600977F7C /* SplitterView.swift */; };
@@ -34,10 +35,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E1A831E4237AF2E900DAE8CE /* OverviewDetail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OverviewDetail.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E14F1C76237C212600FF3E03 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		E1A831E4237AF2E900DAE8CE /* MapUtilities.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MapUtilities.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		E1A831EB237AF2E900DAE8CE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewDetailController.swift; sourceTree = "<group>"; };
 		E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E1A831F3237AF2EA00DAE8CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E1A831F5237AF2EA00DAE8CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -59,10 +61,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E14F1C75237C1F8D00FF3E03 /* OverviewDetail */ = {
+			isa = PBXGroup;
+			children = (
+				E1F8A33A237B11C600977F7C /* MapView.swift */,
+				E1F8A338237B11C600977F7C /* SplitterView.swift */,
+				E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */,
+			);
+			path = OverviewDetail;
+			sourceTree = "<group>";
+		};
 		E1A831DB237AF2E900DAE8CE = {
 			isa = PBXGroup;
 			children = (
-				E1A831E6237AF2E900DAE8CE /* OverviewDetail */,
+				E1A831E6237AF2E900DAE8CE /* MapUtilities */,
 				E1A831E5237AF2E900DAE8CE /* Products */,
 				E1F8A33E237B136000977F7C /* Frameworks */,
 			);
@@ -71,25 +83,24 @@
 		E1A831E5237AF2E900DAE8CE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E1A831E4237AF2E900DAE8CE /* OverviewDetail.app */,
+				E1A831E4237AF2E900DAE8CE /* MapUtilities.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E1A831E6237AF2E900DAE8CE /* OverviewDetail */ = {
+		E1A831E6237AF2E900DAE8CE /* MapUtilities */ = {
 			isa = PBXGroup;
 			children = (
-				E1F8A33A237B11C600977F7C /* MapView.swift */,
-				E1F8A338237B11C600977F7C /* SplitterView.swift */,
-				E1F8A339237B11C600977F7C /* ToolBar.swift */,
 				E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */,
 				E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */,
-				E1A831EB237AF2E900DAE8CE /* ViewController.swift */,
+				E1F8A339237B11C600977F7C /* ToolBar.swift */,
+				E14F1C76237C212600FF3E03 /* ViewController.swift */,
+				E14F1C75237C1F8D00FF3E03 /* OverviewDetail */,
 				E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */,
 				E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */,
 				E1A831F5237AF2EA00DAE8CE /* Info.plist */,
 			);
-			path = OverviewDetail;
+			path = MapUtilities;
 			sourceTree = "<group>";
 		};
 		E1F8A33E237B136000977F7C /* Frameworks */ = {
@@ -103,9 +114,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E1A831E3237AF2E900DAE8CE /* OverviewDetail */ = {
+		E1A831E3237AF2E900DAE8CE /* MapUtilities */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E1A831F8237AF2EA00DAE8CE /* Build configuration list for PBXNativeTarget "OverviewDetail" */;
+			buildConfigurationList = E1A831F8237AF2EA00DAE8CE /* Build configuration list for PBXNativeTarget "MapUtilities" */;
 			buildPhases = (
 				E1A831E0237AF2E900DAE8CE /* Sources */,
 				E1A831E1237AF2E900DAE8CE /* Frameworks */,
@@ -116,9 +127,9 @@
 			);
 			dependencies = (
 			);
-			name = OverviewDetail;
+			name = MapUtilities;
 			productName = OverviewDetail;
-			productReference = E1A831E4237AF2E900DAE8CE /* OverviewDetail.app */;
+			productReference = E1A831E4237AF2E900DAE8CE /* MapUtilities.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -136,7 +147,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E1A831DF237AF2E900DAE8CE /* Build configuration list for PBXProject "OverviewDetail" */;
+			buildConfigurationList = E1A831DF237AF2E900DAE8CE /* Build configuration list for PBXProject "MapUtilities" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -149,7 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E1A831E3237AF2E900DAE8CE /* OverviewDetail */,
+				E1A831E3237AF2E900DAE8CE /* MapUtilities */,
 			);
 		};
 /* End PBXProject section */
@@ -171,10 +182,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1A831EC237AF2E900DAE8CE /* ViewController.swift in Sources */,
+				E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */,
 				E1F8A33D237B11C600977F7C /* MapView.swift in Sources */,
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
 				E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */,
+				E14F1C77237C212600FF3E03 /* ViewController.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
 				E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */,
 			);
@@ -314,7 +326,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UR6MRM7GRB;
-				INFOPLIST_FILE = OverviewDetail/Info.plist;
+				INFOPLIST_FILE = MapUtilities/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -332,7 +344,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UR6MRM7GRB;
-				INFOPLIST_FILE = OverviewDetail/Info.plist;
+				INFOPLIST_FILE = MapUtilities/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -347,7 +359,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E1A831DF237AF2E900DAE8CE /* Build configuration list for PBXProject "OverviewDetail" */ = {
+		E1A831DF237AF2E900DAE8CE /* Build configuration list for PBXProject "MapUtilities" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E1A831F6237AF2EA00DAE8CE /* Debug */,
@@ -356,7 +368,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E1A831F8237AF2EA00DAE8CE /* Build configuration list for PBXNativeTarget "OverviewDetail" */ = {
+		E1A831F8237AF2EA00DAE8CE /* Build configuration list for PBXNativeTarget "MapUtilities" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E1A831F9237AF2EA00DAE8CE /* Debug */,

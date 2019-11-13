@@ -10,13 +10,10 @@ import UIKit
 
 class ToolBar: UIStackView {
 
-    let width: CGFloat = 20
-    let height: CGFloat
-
     init() {
 
         func makeShape(with frame: CGRect) -> CAShapeLayer {
-            let path = UIBezierPath.init(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight, .bottomRight, .bottomLeft], cornerRadii: CGSize.init(width: width/4, height: width/4))
+            let path = UIBezierPath.init(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight, .bottomRight, .bottomLeft], cornerRadii: CGSize.init(width: 5, height: 5))
             let shape = CAShapeLayer.init()
             shape.frame = frame
             shape.path = path.cgPath
@@ -34,25 +31,13 @@ class ToolBar: UIStackView {
 
         // ****************************************************************************************************
 
-        height = 5 * width
-
-        super.init(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        super.init(frame: CGRect.zero)
 
         let shape = makeShape(with: self.bounds)
         self.layer.insertSublayer(shape, at: 0)
         addShadow(to: self, using: shape.path!)
 
         self.axis = .vertical
-
-        var button = UIButton(type: .system)
-        button.setTitle("1", for: .normal)
-        self.addArrangedSubview(button)
-        button = UIButton(type: .system)
-        button.setTitle("2", for: .normal)
-        self.addArrangedSubview(button)
-        button = UIButton(type: .system)
-        button.setTitle("3", for: .normal)
-        self.addArrangedSubview(button)
     }
     
     required init(coder: NSCoder) {
