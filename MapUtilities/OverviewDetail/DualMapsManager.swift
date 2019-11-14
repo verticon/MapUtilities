@@ -30,6 +30,8 @@ class DualMapsManager : NSObject {
         }
     }
 
+    private static let spanRatio = 10.0
+
     let overview = MKMapView()
     let detail = MKMapView()
 
@@ -51,7 +53,7 @@ class DualMapsManager : NSObject {
         setup(map: detail)
 
         overview.region = initialOverviewRegion
-        detail.region = initialOverviewRegion / 10.0
+        detail.region = initialOverviewRegion / DualMapsManager.spanRatio
 
         detailAnnotation.coordinate = detail.region.center
         overview.addAnnotation(detailAnnotation)
@@ -67,6 +69,17 @@ class DualMapsManager : NSObject {
     }
 
     @objc func tapGestureHandler(_ recognizer: UITapGestureRecognizer) {
+        guard let mapView = recognizer.view as? MKMapView else { return }
+        
+        if mapView == overview {
+            let touchPoint = recognizer.location(in: overview)
+            let touchCoordinate = overview.convert(touchPoint, toCoordinateFrom: overview)
+            overview.region.center = touchCoordinate
+            detail.region = overview.region / DualMapsManager.spanRatio
+        }
+        else {
+            overview.region = DualMapsManager.spanRatio * detail.region
+        }
     }
 }
 
