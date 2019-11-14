@@ -19,16 +19,11 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         do { // Add the toolBar's buttons
-            var button = UIButton(type: .system)
-            button.setTitle("1", for: .normal)
-            button.addTarget(self, action: #selector(presentOverviewDetail), for: .touchUpInside)
-            toolBar.addArrangedSubview(button)
-            button = UIButton(type: .system)
-            button.setTitle("2", for: .normal)
-            toolBar.addArrangedSubview(button)
-            button = UIButton(type: .system)
-            button.setTitle("3", for: .normal)
-            toolBar.addArrangedSubview(button)
+            let overviewDetailButton = UIButton(type: .roundedRect)
+            overviewDetailButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
+            overviewDetailButton.addTarget(self, action: #selector(presentOverviewDetail), for: .touchUpInside)
+            overviewDetailButton.tintColor = .orange
+            toolBar.addArrangedSubview(overviewDetailButton)
         }
 
         do { // Add the subviews and their constarints
@@ -44,10 +39,10 @@ class ViewController: UIViewController {
                 map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
                 map.leftAnchor.constraint(equalTo: view.leftAnchor),
 
-                toolBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-                toolBar.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -10),
-                toolBar.widthAnchor.constraint(equalToConstant: 50),
-                toolBar.heightAnchor.constraint(equalToConstant: CGFloat(toolBar.arrangedSubviews.count) * 25)
+                toolBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+                toolBar.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -20),
+                toolBar.widthAnchor.constraint(equalToConstant: 35),
+                toolBar.heightAnchor.constraint(equalToConstant: CGFloat(toolBar.arrangedSubviews.count) * 35)
             ])
         }
 
@@ -55,7 +50,7 @@ class ViewController: UIViewController {
     }
 
     @objc private func presentOverviewDetail(_ button: UIButton) {
-        self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) {  }
+        self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) { }
     }
 
     private var zoomedToUser = false
@@ -80,9 +75,4 @@ class ViewController: UIViewController {
         default: break
         }
     }
-
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { toolBar.setNeedsDisplay() }
-    }
-
 }

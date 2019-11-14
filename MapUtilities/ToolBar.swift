@@ -38,22 +38,26 @@ class ToolBar: UIStackView {
         addShadow(to: self, using: shape.path!)
 
         self.axis = .vertical
+        self.distribution = .fillEqually
+        self.alpha = 0.5
     }
     
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func draw(_ rect: CGRect) {
-        guard let shape = self.layer.sublayers?[0] as? CAShapeLayer else { fatalError("No shape layer???") }
-        
-        switch self.traitCollection.userInterfaceStyle {
-        case .dark:
-            shape.fillColor = UIColor.lightGray.cgColor
-        default:
-            shape.fillColor = UIColor.white.cgColor
-        }
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
 
-        shape.opacity = 0.5
+        if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            guard let shape = self.layer.sublayers?[0] as? CAShapeLayer else { fatalError("No shape layer???") }
+            
+            switch self.traitCollection.userInterfaceStyle {
+            case .dark: shape.fillColor = UIColor.lightGray.cgColor
+            default: shape.fillColor = UIColor.white.cgColor
+            }
+
+            shape.opacity = 0.5
+        }
     }
 }

@@ -15,18 +15,36 @@ class DualMapsManager : NSObject {
     private class DetailAnnotationView : MKAnnotationView {
         static let reuseIdentifier = "Detail"
 
+        private func setColors() {
+            if self.traitCollection.userInterfaceStyle == .light {
+                backgroundColor = UIColor.darkGray
+                layer.borderColor = UIColor.black.cgColor
+            }
+            else {
+                backgroundColor = UIColor.white
+                layer.borderColor = UIColor.blue.cgColor
+            }
+        }
+
         init(annotation: MKAnnotation?) {
             super.init(annotation: annotation, reuseIdentifier: DetailAnnotationView.reuseIdentifier)
-            backgroundColor = .red
-            alpha = 0.1
+            alpha = 0.2
+            layer.borderWidth = 1
+            setColors()
         }
         
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
+        override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+            if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { setColors() }
+        }
+
         func updateBounds(_ dualMaps: DualMapsManager) {
-            bounds = dualMaps.overview.convert(dualMaps.detail.region, toRectTo: dualMaps.overview)
+            var newBounds = dualMaps.overview.convert(dualMaps.detail.region, toRectTo: dualMaps.overview)
+            newBounds.size = CGSize(width: max(newBounds.width, 20), height: max(newBounds.height, 20))
+            bounds = newBounds
         }
     }
 
