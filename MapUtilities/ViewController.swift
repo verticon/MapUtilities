@@ -55,23 +55,26 @@ class ViewController: UIViewController {
     }
 
     @objc private func presentOverviewDetail(_ button: UIButton) {
-        self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true)
+        self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) {  }
     }
 
+    private var zoomedToUser = false
     private func userLocationEventHandler(event: UserLocationEvent) {
 
         switch event {
+        case .locationUpdate(let userLocation):
+            if !zoomedToUser {
+                let initialSpan: CLLocationDistance = 100000
+                map.region = MKCoordinateRegion(center: userLocation.coordinate, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
+                map.showsUserLocation = true
 
+                zoomedToUser = true
+            }
         case .authorizationUpdate(let authorization):
             switch authorization {
-            case .authorizedAlways: fallthrough
-            case .authorizedWhenInUse:
-                guard let currentLocation = UserLocation.instance.currentLocation?.coordinate else { fatalError("No current location?") }
-                let initialSpan: CLLocationDistance = 100000
-                map.region = MKCoordinateRegion(center: currentLocation, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
-
-            default:
-                alertUser(title: "Location Access Not Authorized", body: "\(applicationName) will not be able to provide location related functionality.")
+            case .restricted: fallthrough
+            case .denied: alertUser(title: "Location Access Not Authorized", body: "\(applicationName) will not be able to provide location related functionality.")
+            default: break
             }
 
         default: break

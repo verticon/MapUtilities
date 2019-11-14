@@ -12,65 +12,62 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
-    private let initialOverviewRegion: MKCoordinateRegion
-
-    private let overview = MapView()
+    private let dualMapsManager: DualMapsManager
     private var splitter = SplitterView()
-    private let detail = MapView()
-    private let dismiss = UIButton()
+    private let dismissButton = UIButton()
 
     private var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
     private lazy var potraitConstraints: [NSLayoutConstraint] = [
-        overview.topAnchor.constraint(equalTo: view.topAnchor),
-        overview.rightAnchor.constraint(equalTo: view.rightAnchor),
-        overview.bottomAnchor.constraint(equalTo: splitter.topAnchor),
-        overview.leftAnchor.constraint(equalTo: view.leftAnchor),
+        dualMapsManager.overview.topAnchor.constraint(equalTo: view.topAnchor),
+        dualMapsManager.overview.rightAnchor.constraint(equalTo: view.rightAnchor),
+        dualMapsManager.overview.bottomAnchor.constraint(equalTo: splitter.topAnchor),
+        dualMapsManager.overview.leftAnchor.constraint(equalTo: view.leftAnchor),
 
         splitter.leftAnchor.constraint(equalTo: view.leftAnchor),
         splitter.rightAnchor.constraint(equalTo: view.rightAnchor),
         splitter.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         splitter.heightAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-        detail.topAnchor.constraint(equalTo: splitter.bottomAnchor),
-        detail.rightAnchor.constraint(equalTo: view.rightAnchor),
-        detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        detail.leftAnchor.constraint(equalTo: view.leftAnchor),
+        dualMapsManager.detail.topAnchor.constraint(equalTo: splitter.bottomAnchor),
+        dualMapsManager.detail.rightAnchor.constraint(equalTo: view.rightAnchor),
+        dualMapsManager.detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        dualMapsManager.detail.leftAnchor.constraint(equalTo: view.leftAnchor),
     ]
     private lazy var landscapeRightConstraints: [NSLayoutConstraint] = [
-        overview.topAnchor.constraint(equalTo: view.topAnchor),
-        overview.rightAnchor.constraint(equalTo: view.rightAnchor),
-        overview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        overview.leftAnchor.constraint(equalTo: splitter.rightAnchor),
+        dualMapsManager.overview.topAnchor.constraint(equalTo: view.topAnchor),
+        dualMapsManager.overview.rightAnchor.constraint(equalTo: view.rightAnchor),
+        dualMapsManager.overview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        dualMapsManager.overview.leftAnchor.constraint(equalTo: splitter.rightAnchor),
 
         splitter.topAnchor.constraint(equalTo: view.topAnchor),
         splitter.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         splitter.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-        detail.topAnchor.constraint(equalTo: view.topAnchor),
-        detail.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-        detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        detail.leftAnchor.constraint(equalTo: view.leftAnchor),
+        dualMapsManager.detail.topAnchor.constraint(equalTo: view.topAnchor),
+        dualMapsManager.detail.rightAnchor.constraint(equalTo: splitter.leftAnchor),
+        dualMapsManager.detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        dualMapsManager.detail.leftAnchor.constraint(equalTo: view.leftAnchor),
     ]
     private lazy var landscapeLeftConstraints: [NSLayoutConstraint] = [
-        overview.topAnchor.constraint(equalTo: view.topAnchor),
-        overview.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-        overview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        overview.leftAnchor.constraint(equalTo: view.leftAnchor),
+        dualMapsManager.overview.topAnchor.constraint(equalTo: view.topAnchor),
+        dualMapsManager.overview.rightAnchor.constraint(equalTo: splitter.leftAnchor),
+        dualMapsManager.overview.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        dualMapsManager.overview.leftAnchor.constraint(equalTo: view.leftAnchor),
 
         splitter.topAnchor.constraint(equalTo: view.topAnchor),
         splitter.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         splitter.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-        detail.topAnchor.constraint(equalTo: view.topAnchor),
-        detail.rightAnchor.constraint(equalTo: view.rightAnchor),
-        detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        detail.leftAnchor.constraint(equalTo: splitter.rightAnchor),
+        dualMapsManager.detail.topAnchor.constraint(equalTo: view.topAnchor),
+        dualMapsManager.detail.rightAnchor.constraint(equalTo: view.rightAnchor),
+        dualMapsManager.detail.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        dualMapsManager.detail.leftAnchor.constraint(equalTo: splitter.rightAnchor),
     ]
 
     init(initialOverviewRegion: MKCoordinateRegion) {
-        self.initialOverviewRegion = initialOverviewRegion
+        dualMapsManager = DualMapsManager(initialOverviewRegion: initialOverviewRegion)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -81,39 +78,32 @@ class OverviewDetailController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        overview.region = initialOverviewRegion
-        detail.region = MKCoordinateRegion(center: initialOverviewRegion.center, latitudinalMeters: initialOverviewRegion.span.latitudeDelta / 10, longitudinalMeters: initialOverviewRegion.span.longitudeDelta / 10)
-
-        overview.otherMap = detail
-        detail.otherMap = overview
-
-
-        overview.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(overview)
+        dualMapsManager.overview.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(dualMapsManager.overview)
 
         splitter.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(splitter)
 
-        detail.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(detail)
+        dualMapsManager.detail.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(dualMapsManager.detail)
 
 
-        dismiss.setTitle("D", for: .normal)
-        dismiss.setTitleColor(.lightGray, for: .normal)
-        dismiss.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
-        dismiss.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(dismiss)
+        dismissButton.setTitle("D", for: .normal)
+        dismissButton.setTitleColor(.lightGray, for: .normal)
+        dismissButton.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(dismissButton)
         NSLayoutConstraint.activate( [
-            dismiss.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            dismiss.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -10),
-            dismiss.widthAnchor.constraint(equalToConstant: 50),
-            dismiss.heightAnchor.constraint(equalToConstant: 30)
+            dismissButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            dismissButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -10),
+            dismissButton.widthAnchor.constraint(equalToConstant: 50),
+            dismissButton.heightAnchor.constraint(equalToConstant: 30)
         ] )
 
 
         var previousOrientation: UIDeviceOrientation?
-        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { notification in
-
+        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { _ in
+            
             let newOrientation = UIDevice.current.orientation
             guard newOrientation != previousOrientation else { return }
             
@@ -143,13 +133,19 @@ class OverviewDetailController: UIViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
 
-        if currentConstraints == nil { // The orientationDidChangeNotification handler (see viewDidLoad()) sets it to nil
+        if currentConstraints == nil { // It is initially nil, and the orientationDidChangeNotification handler (see viewDidLoad()) sets it to nil
 
             switch UIDevice.current.orientation {
+            case .unknown: fallthrough
+            case .faceUp: fallthrough
+            case .portraitUpsideDown: fallthrough
+            case .faceDown: fallthrough
             case .portrait: currentConstraints = potraitConstraints
+
             case .landscapeRight: currentConstraints = landscapeRightConstraints
             case .landscapeLeft: currentConstraints = landscapeLeftConstraints
-            default: return
+
+            @unknown default: print("Unsupported orientation")
             }
 
             NSLayoutConstraint.activate(currentConstraints)
@@ -162,10 +158,9 @@ class OverviewDetailController: UIViewController {
         self.dismiss(animated: true) { }
     }
 
-
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
-            dismiss.setNeedsDisplay()
+            dismissButton.setNeedsDisplay()
         }
     }
 }
