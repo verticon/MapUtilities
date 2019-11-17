@@ -13,9 +13,12 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
+    private enum ToolIdentifier : Int, CaseIterable {
+        case dismiss
+    }
+
     private let dualMapsManager: DualMapsManager
     private var splitter = SplitterView()
-    private let dismissButton = DismissButton()
 
     private var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
     private lazy var potraitConstraints: [NSLayoutConstraint] = [
@@ -88,7 +91,17 @@ class OverviewDetailController: UIViewController {
         dualMapsManager.detail.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(dualMapsManager.detail)
 
-        dismissButton.display(in: self)
+        do { // Add the toolBar last so that it is on top.
+            enum ToolIdentifier : Int, CaseIterable {
+                case dummy
+            }
+
+            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
+                switch identifier {
+                case .dummy: break
+                }
+            }
+        }
 
         var previousOrientation: UIDeviceOrientation?
         NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { _ in

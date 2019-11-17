@@ -12,65 +12,45 @@ import VerticonsToolbox
 
 class PresentingController: UIViewController {
 
-    private enum ToolBarButton : Int {
-        case overviewDetail
-        case tracks
-    }
-
     private let map = MKMapView()
-    private let toolBar = ToolBar()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        do { // Add the toolBar's buttons
-            let overviewDetailButton = UIButton(type: .roundedRect)
-            overviewDetailButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
-            overviewDetailButton.addTarget(self, action: #selector(presentTool), for: .touchUpInside)
-            overviewDetailButton.tintColor = .orange
-            overviewDetailButton.tag = ToolBarButton.overviewDetail.rawValue
-            toolBar.addArrangedSubview(overviewDetailButton)
-
-            let tracksButton = UIButton(type: .roundedRect)
-            tracksButton.backgroundColor = .brown
-            //tracksButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
-            tracksButton.addTarget(self, action: #selector(presentTool), for: .touchUpInside)
-            tracksButton.tag = ToolBarButton.tracks.rawValue
-            toolBar.addArrangedSubview(tracksButton)
-        }
 
         do { // Add the subviews and their constarints
             map.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(map)
      
-            toolBar.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(toolBar)
-
             NSLayoutConstraint.activate( [
                 map.topAnchor.constraint(equalTo: view.topAnchor),
                 map.rightAnchor.constraint(equalTo: view.rightAnchor),
                 map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
                 map.leftAnchor.constraint(equalTo: view.leftAnchor),
-
-                toolBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-                toolBar.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -20),
-                toolBar.widthAnchor.constraint(equalToConstant: 35),
-                toolBar.heightAnchor.constraint(equalToConstant: CGFloat(toolBar.arrangedSubviews.count) * 35)
             ])
         }
 
-        _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
-    }
+        do { // Add the toolBar last so that it is on top.
+            enum ToolIdentifier : Int, CaseIterable {
+                case overviewDetail
+                case tracks
+            }
 
-    @objc private func presentTool(_ button: UIButton) {
-        switch ToolBarButton.init(rawValue: button.tag) {
-        case .overviewDetail:
-            self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) { }
-        case .tracks:
-            self.present(TracksController(initialOverviewRegion: map.region), animated: true) { }
-        case .none:
-            print("Unknown toolbar button: \(button.tag)")
+            let toolBar = ToolBar(parent: view) { (identifier: ToolIdentifier) in
+                switch identifier {
+                case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true) { }
+                case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true) { }
+                }
+            }
+
+            let overviewDetailButton = toolBar.getButton(for: .overviewDetail)
+            overviewDetailButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
+            overviewDetailButton.tintColor = .orange
+
+            let tracksButton = toolBar.getButton(for: .tracks)
+            tracksButton.backgroundColor = .brown
         }
+
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
     }
 
     private var zoomedToUser = false

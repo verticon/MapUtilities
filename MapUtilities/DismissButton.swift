@@ -12,23 +12,21 @@ class DismissButton: UIButton {
 
     private var controller: UIViewController!
 
-    func display(in: UIViewController) {
-        guard let view = `in`.view else { return }
+    init(controller: UIViewController) {
+        self.controller = controller
 
-        controller = `in`
-
-        self.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(self)
-        NSLayoutConstraint.activate( [
-            self.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            self.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -20),
-            self.widthAnchor.constraint(equalToConstant: 30),
-            self.heightAnchor.constraint(equalToConstant: 30)
-        ] )
+        super.init(frame: CGRect.zero)
 
         self.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
+        self.backgroundColor = .gray
+        self.layer.cornerRadius = 5.0
+        self.clipsToBounds = true
     }
-
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     @objc private func dismiss(_ button: UIButton) {
         controller.dismiss(animated: true) { }
     }

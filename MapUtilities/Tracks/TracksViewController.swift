@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  TracksViewController.swift
 //  Maps
 //
 //  Created by Robert Vaessen on 10/24/17.
@@ -11,9 +11,9 @@ import MapKit
 import VerticonsToolbox
 
 // TODO: Start fresh, disallow location updates, and see what happens.
-class ViewController: UIViewController {
+class TracksController: UIViewController {
 
-    @IBOutlet private weak var mapView: MKMapView!
+    private let mapView = MKMapView()
  
     private var userTrackingPolyline: UserTrackingPolyline?
     private let polylineWidth = 4.0 // meters
@@ -26,10 +26,32 @@ class ViewController: UIViewController {
 
     private var debugConsole: DebugLayer?
 
+    init(initialOverviewRegion: MKCoordinateRegion) {
+        super.init(nibName: nil, bundle: nil)
+        mapView.region = initialOverviewRegion
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         debugConsole = DebugLayer.add(to: view)
+
+          do {
+               mapView.translatesAutoresizingMaskIntoConstraints = false
+               view.addSubview(mapView)
+        
+               NSLayoutConstraint.activate( [
+                   mapView.topAnchor.constraint(equalTo: view.topAnchor),
+                   mapView.rightAnchor.constraint(equalTo: view.rightAnchor),
+                   mapView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                   mapView.leftAnchor.constraint(equalTo: view.leftAnchor),
+               ])
+        }
+
 
         do {
             let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
@@ -44,6 +66,17 @@ class ViewController: UIViewController {
             trackingUser = userTrackingButton.trackingUser
         }
 
+        do { // Add the toolBar last so that it is on top.
+            enum ToolIdentifier : Int, CaseIterable {
+                case dummy
+            }
+
+            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
+                switch identifier {
+                case .dummy: break
+                }
+            }
+        }
 
         do {
 
@@ -98,7 +131,7 @@ class ViewController: UIViewController {
             case .success(let tracker):
                 self.userTrackingPolyline = tracker
                 userIsOnAnnotation.title = mapView.userLocation.title
-                _ = tracker.addListener(self, handlerClassMethod: ViewController.trackngPolylineEventHandler)
+                _ = tracker.addListener(self, handlerClassMethod: TracksController.trackngPolylineEventHandler)
 
             case .error(let error):
                 print(error)
@@ -107,10 +140,9 @@ class ViewController: UIViewController {
 
         mapView.delegate = self
         
-        _ = UserLocation.instance.addListener(self, handlerClassMethod: ViewController.userLocationEventHandler)
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: TracksController.userLocationEventHandler)
         
-       mapView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:))))
-        
+        mapView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:))))
     }
 
     private func userLocationEventHandler(event: UserLocationEvent) {
@@ -178,7 +210,7 @@ class ViewController: UIViewController {
 
         case .userPositionChanged:
             guard userIsOnAnnotationAnimator == nil else { return }
-            userIsOnAnnotation.coordinate = MKCoordinateForMapPoint(trackingData.point)
+            userIsOnAnnotation.coordinate = trackingData.point.coordinate
             userIsOnAnnotation.subtitle = userIsOnAnnotation.coordinate.description
             
         case .trackingDisabled:
@@ -190,14 +222,14 @@ class ViewController: UIViewController {
         guard let tracker = userTrackingPolyline, recognizer.state == .recognized else { return }
         
         let tapCoordinate = mapView.convert(recognizer.location(in: mapView), toCoordinateFrom: mapView)
-        let closest = tracker.polyline.closestPoint(to: MKMapPointForCoordinate(tapCoordinate))
+        let closest = tracker.polyline.closestPoint(to: MKMapPoint(tapCoordinate))
         let distanceText = "\(String(format: "%.1f", closest.distance)) meters"
         
         tapAnnotation.coordinate = tapCoordinate
         tapAnnotation.title = distanceText
         tapAnnotation.subtitle = tapAnnotation.coordinate.description
         
-        pathAnnotation.coordinate = MKCoordinateForMapPoint(closest.point)
+        pathAnnotation.coordinate = closest.point.coordinate
         pathAnnotation.title = distanceText
         pathAnnotation.subtitle = pathAnnotation.coordinate.description
         
@@ -208,11 +240,11 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController : MKMapViewDelegate {
+extension TracksController : MKMapViewDelegate {
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
         if let tracker = self.userTrackingPolyline, mapView.overlays.count == 0 {
-            mapView.add(tracker.polyline)
+            mapView.addOverlay(tracker.polyline)
             mapView.region = 1.25 * tracker.polyline.boundingRegion
         }
     }
@@ -222,7 +254,7 @@ extension ViewController : MKMapViewDelegate {
             guard let annotation = view.annotation as? MKPointAnnotation, annotation === userIsOnAnnotation else { return }
  
             if userIsOnAnnotationAnimator != nil, let data = userTrackingPolyline?.userTrackingData {
-                let finalCoordinate = MKCoordinateForMapPoint(data.point)
+                let finalCoordinate = data.point.coordinate
                 userIsOnAnnotationAnimator!.addAnimations {
                     annotation.coordinate = finalCoordinate
                 }
