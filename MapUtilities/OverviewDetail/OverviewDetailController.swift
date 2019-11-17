@@ -13,39 +13,6 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
-    private class DismissButton : UIButton {
-        override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-            if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { setNeedsDisplay() }
-        }
-
-        override func draw(_ rect: CGRect) { // Draw a return symbol: an arrow consisting of a tip and a right angled shaft.
-            guard let context = UIGraphicsGetCurrentContext() else { return }
-
-            let shaftThickness = min(self.bounds.width, self.bounds.height) / 4
-            let tipHeight = shaftThickness
-            let tipWidth = 2.5 * shaftThickness
-
-            let tipPoint = CGPoint(x: 0, y: bounds.maxY - tipWidth/2)
-
-            context.move(to: tipPoint)
-            context.addLine(to: CGPoint(x: context.currentPointOfPath.x + tipHeight, y: context.currentPointOfPath.y - tipWidth/2)) // Up and to the right
-            context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: context.currentPointOfPath.y + (tipWidth/2 - shaftThickness/2))) // Down to the shaft
-            context.addLine(to: CGPoint(x: bounds.maxX - shaftThickness, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
-            context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: bounds.minY)) // Vertical segment of shaft
-            context.addLine(to: CGPoint(x: bounds.maxX, y: bounds.minY)) // Vertical segment of shaft
-            context.addLine(to: CGPoint(x: bounds.maxX, y: bounds.maxY - tipWidth/2 + shaftThickness/2)) // Vertical segment of shaft
-            context.addLine(to: CGPoint(x: bounds.minX + tipHeight, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
-            context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: bounds.maxY))
-            context.addLine(to: tipPoint)
-
-            context.setAlpha(0.5)
-            context.setLineWidth(2.0)
-            context.setStrokeColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.white.cgColor : UIColor.lightGray.cgColor)
-            context.setFillColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.lightGray.cgColor : UIColor.darkGray.cgColor)
-            context.drawPath(using: .fillStroke)
-        }
-    }
-
     private let dualMapsManager: DualMapsManager
     private var splitter = SplitterView()
     private let dismissButton = DismissButton()
@@ -121,17 +88,7 @@ class OverviewDetailController: UIViewController {
         dualMapsManager.detail.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(dualMapsManager.detail)
 
-        dismissButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(dismissButton)
-        NSLayoutConstraint.activate( [
-            dismissButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            dismissButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -20),
-            dismissButton.widthAnchor.constraint(equalToConstant: 30),
-            dismissButton.heightAnchor.constraint(equalToConstant: 30)
-        ] )
-
-
-        dismissButton.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
+        dismissButton.display(in: self)
 
         var previousOrientation: UIDeviceOrientation?
         NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { _ in
@@ -184,10 +141,6 @@ class OverviewDetailController: UIViewController {
 
             splitter.adapt(to: UIDevice.current.orientation)
         }
-    }
-
-    @objc private func dismiss(_ button: UIButton) {
-        self.dismiss(animated: true) { }
     }
 
 }

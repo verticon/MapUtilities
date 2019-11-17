@@ -10,7 +10,12 @@ import UIKit
 import MapKit
 import VerticonsToolbox
 
-class ViewController: UIViewController {
+class PresentingController: UIViewController {
+
+    private enum ToolBarButton : Int {
+        case overviewDetail
+        case tracks
+    }
 
     private let map = MKMapView()
     private let toolBar = ToolBar()
@@ -21,9 +26,17 @@ class ViewController: UIViewController {
         do { // Add the toolBar's buttons
             let overviewDetailButton = UIButton(type: .roundedRect)
             overviewDetailButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
-            overviewDetailButton.addTarget(self, action: #selector(presentOverviewDetail), for: .touchUpInside)
+            overviewDetailButton.addTarget(self, action: #selector(presentTool), for: .touchUpInside)
             overviewDetailButton.tintColor = .orange
+            overviewDetailButton.tag = ToolBarButton.overviewDetail.rawValue
             toolBar.addArrangedSubview(overviewDetailButton)
+
+            let tracksButton = UIButton(type: .roundedRect)
+            tracksButton.backgroundColor = .brown
+            //tracksButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
+            tracksButton.addTarget(self, action: #selector(presentTool), for: .touchUpInside)
+            tracksButton.tag = ToolBarButton.tracks.rawValue
+            toolBar.addArrangedSubview(tracksButton)
         }
 
         do { // Add the subviews and their constarints
@@ -46,11 +59,18 @@ class ViewController: UIViewController {
             ])
         }
 
-        _ = UserLocation.instance.addListener(self, handlerClassMethod: ViewController.userLocationEventHandler)
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
     }
 
-    @objc private func presentOverviewDetail(_ button: UIButton) {
-        self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) { }
+    @objc private func presentTool(_ button: UIButton) {
+        switch ToolBarButton.init(rawValue: button.tag) {
+        case .overviewDetail:
+            self.present(OverviewDetailController(initialOverviewRegion: map.region), animated: true) { }
+        case .tracks:
+            self.present(TracksController(initialOverviewRegion: map.region), animated: true) { }
+        case .none:
+            print("Unknown toolbar button: \(button.tag)")
+        }
     }
 
     private var zoomedToUser = false

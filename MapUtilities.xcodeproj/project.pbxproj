@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E14F1C77237C212600FF3E03 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F1C76237C212600FF3E03 /* ViewController.swift */; };
+		E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */; };
+		E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0D238180630019C7B5 /* DismissButton.swift */; };
+		E14F1C77237C212600FF3E03 /* PresentingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F1C76237C212600FF3E03 /* PresentingController.swift */; };
 		E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */; };
 		E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */; };
 		E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */; };
@@ -35,7 +37,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E14F1C76237C212600FF3E03 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TracksViewController.swift; sourceTree = "<group>"; };
+		E1427F0D238180630019C7B5 /* DismissButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissButton.swift; sourceTree = "<group>"; };
+		E14F1C76237C212600FF3E03 /* PresentingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentingController.swift; sourceTree = "<group>"; };
 		E1A831E4237AF2E900DAE8CE /* MapUtilities.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MapUtilities.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -61,6 +65,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E1427F0A23817A290019C7B5 /* Tracks */ = {
+			isa = PBXGroup;
+			children = (
+				E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */,
+			);
+			path = Tracks;
+			sourceTree = "<group>";
+		};
 		E14F1C75237C1F8D00FF3E03 /* OverviewDetail */ = {
 			isa = PBXGroup;
 			children = (
@@ -94,8 +106,10 @@
 				E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */,
 				E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */,
 				E1F8A339237B11C600977F7C /* ToolBar.swift */,
-				E14F1C76237C212600FF3E03 /* ViewController.swift */,
+				E1427F0D238180630019C7B5 /* DismissButton.swift */,
+				E14F1C76237C212600FF3E03 /* PresentingController.swift */,
 				E14F1C75237C1F8D00FF3E03 /* OverviewDetail */,
+				E1427F0A23817A290019C7B5 /* Tracks */,
 				E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */,
 				E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */,
 				E1A831F5237AF2EA00DAE8CE /* Info.plist */,
@@ -186,7 +200,9 @@
 				E1F8A33D237B11C600977F7C /* DualMapsManager.swift in Sources */,
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
 				E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */,
-				E14F1C77237C212600FF3E03 /* ViewController.swift in Sources */,
+				E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */,
+				E14F1C77237C212600FF3E03 /* PresentingController.swift in Sources */,
+				E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
 				E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */,
 			);
