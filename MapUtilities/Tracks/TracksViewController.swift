@@ -24,6 +24,19 @@ class TracksController: UIViewController {
     private var tapAnnotation = MKPointAnnotation()
     private var pathAnnotation = MKPointAnnotation()
 
+    private var isDebuggingOn: Bool {
+        get { return debugConsole != nil }
+        set {
+            guard newValue != self.isDebuggingOn else { return }
+            if newValue {
+                debugConsole = DebugLayer.add(to: view)
+            }
+            else {
+                debugConsole?.remove()
+                debugConsole = nil
+            }
+        }
+    }
     private var debugConsole: DebugLayer?
 
     init(initialOverviewRegion: MKCoordinateRegion) {
@@ -38,20 +51,17 @@ class TracksController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        debugConsole = DebugLayer.add(to: view)
-
-          do {
-               mapView.translatesAutoresizingMaskIntoConstraints = false
-               view.addSubview(mapView)
-        
-               NSLayoutConstraint.activate( [
-                   mapView.topAnchor.constraint(equalTo: view.topAnchor),
-                   mapView.rightAnchor.constraint(equalTo: view.rightAnchor),
-                   mapView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-                   mapView.leftAnchor.constraint(equalTo: view.leftAnchor),
-               ])
+        do {
+            mapView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(mapView)
+    
+            NSLayoutConstraint.activate( [
+                mapView.topAnchor.constraint(equalTo: view.topAnchor),
+                mapView.rightAnchor.constraint(equalTo: view.rightAnchor),
+                mapView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                mapView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            ])
         }
-
 
         do {
             let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
@@ -64,16 +74,19 @@ class TracksController: UIViewController {
                 userTrackingButton.widthAnchor.constraint(equalToConstant: 32)])
  
             trackingUser = userTrackingButton.trackingUser
-        }
+            mapView.showsCompass = false
+}
 
         do { // Add the toolBar last so that it is on top.
             enum ToolIdentifier : Int, CaseIterable {
                 case debug
             }
 
-            let toolBar = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
+            let toolBar = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier, button: UIButton) in
                 switch identifier {
-                case .debug: break
+                case .debug:
+                    self.isDebuggingOn = !self.isDebuggingOn
+                    button.backgroundColor = self.isDebuggingOn ? .black : .clear
                 }
             }
 
