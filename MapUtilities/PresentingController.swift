@@ -43,11 +43,14 @@ class PresentingController: UIViewController {
             }
 
             let overviewDetailButton = toolBar.getButton(for: .overviewDetail)
-            overviewDetailButton.setImage(#imageLiteral(resourceName: "MagnifyingGlass.png"), for: .normal)
-            overviewDetailButton.tintColor = .orange
+            let magnifyImage = UIImage(#imageLiteral(resourceName: "Magnify.png")).withRenderingMode(.alwaysOriginal)
+            overviewDetailButton.setImage(magnifyImage, for: .normal)
+            overviewDetailButton.alpha = 0.75
 
             let tracksButton = toolBar.getButton(for: .tracks)
-            tracksButton.backgroundColor = .brown
+            let polylineImage = UIImage(#imageLiteral(resourceName: "Polyline")).withRenderingMode(.alwaysOriginal)
+            tracksButton.setImage(polylineImage, for: .normal)
+            tracksButton.alpha = 0.75
         }
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)

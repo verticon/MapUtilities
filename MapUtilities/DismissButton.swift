@@ -17,10 +17,11 @@ class DismissButton: UIButton {
 
         super.init(frame: CGRect.zero)
 
-        self.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
-        self.backgroundColor = .gray
-        self.layer.cornerRadius = 5.0
+        self.backgroundColor = .clear
+        self.layer.cornerRadius = 2.0
         self.clipsToBounds = true
+
+        self.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
     }
     
     required init?(coder: NSCoder) {
@@ -38,27 +39,29 @@ class DismissButton: UIButton {
     override func draw(_ rect: CGRect) { // Draw a return symbol: an arrow consisting of a tip and a right angled shaft.
         guard let context = UIGraphicsGetCurrentContext() else { return }
 
-        let shaftThickness = min(self.bounds.width, self.bounds.height) / 4
+        let shaftThickness = min(self.bounds.width, self.bounds.height) / 5
         let tipHeight = shaftThickness
         let tipWidth = 2.5 * shaftThickness
 
-        let tipPoint = CGPoint(x: 0, y: bounds.maxY - tipWidth/2)
+        let drawingRect = self.bounds.insetBy(dx: 4, dy: 4)
+
+        let tipPoint = CGPoint(x: drawingRect.minX, y: drawingRect.maxY - tipWidth/2)
 
         context.move(to: tipPoint)
         context.addLine(to: CGPoint(x: context.currentPointOfPath.x + tipHeight, y: context.currentPointOfPath.y - tipWidth/2)) // Up and to the right
         context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: context.currentPointOfPath.y + (tipWidth/2 - shaftThickness/2))) // Down to the shaft
-        context.addLine(to: CGPoint(x: bounds.maxX - shaftThickness, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
-        context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: bounds.minY)) // Vertical segment of shaft
-        context.addLine(to: CGPoint(x: bounds.maxX, y: bounds.minY)) // Vertical segment of shaft
-        context.addLine(to: CGPoint(x: bounds.maxX, y: bounds.maxY - tipWidth/2 + shaftThickness/2)) // Vertical segment of shaft
-        context.addLine(to: CGPoint(x: bounds.minX + tipHeight, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
-        context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: bounds.maxY))
+        context.addLine(to: CGPoint(x: drawingRect.maxX - shaftThickness, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
+        context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: drawingRect.minY)) // Vertical segment of shaft
+        context.addLine(to: CGPoint(x: drawingRect.maxX, y: drawingRect.minY)) // Vertical segment of shaft
+        context.addLine(to: CGPoint(x: drawingRect.maxX, y: drawingRect.maxY - tipWidth/2 + shaftThickness/2)) // Vertical segment of shaft
+        context.addLine(to: CGPoint(x: drawingRect.minX + tipHeight, y: context.currentPointOfPath.y)) // Horizontal segment of shaft
+        context.addLine(to: CGPoint(x: context.currentPointOfPath.x, y: drawingRect.maxY))
         context.addLine(to: tipPoint)
 
         context.setAlpha(0.5)
         context.setLineWidth(2.0)
-        context.setStrokeColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.white.cgColor : UIColor.lightGray.cgColor)
-        context.setFillColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.lightGray.cgColor : UIColor.darkGray.cgColor)
+        context.setStrokeColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.black.cgColor : UIColor.lightGray.cgColor)
+        context.setFillColor(self.traitCollection.userInterfaceStyle == .light ? UIColor.darkGray.cgColor : UIColor.darkGray.cgColor)
         context.drawPath(using: .fillStroke)
     }
 }

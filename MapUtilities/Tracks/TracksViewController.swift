@@ -68,14 +68,19 @@ class TracksController: UIViewController {
 
         do { // Add the toolBar last so that it is on top.
             enum ToolIdentifier : Int, CaseIterable {
-                case dummy
+                case debug
             }
 
-            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
+            let toolBar = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
                 switch identifier {
-                case .dummy: break
+                case .debug: break
                 }
             }
+
+            let debugButton = toolBar.getButton(for: .debug)
+            let debugImage = UIImage(#imageLiteral(resourceName: "Debug.png")).withRenderingMode(.alwaysOriginal)
+            debugButton.setImage(debugImage, for: .normal)
+            debugButton.alpha = 0.75
         }
 
         do {
