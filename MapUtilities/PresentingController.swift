@@ -35,7 +35,7 @@ class PresentingController: UIViewController {
                 case tracks
             }
 
-            let toolBar = ToolBar(parent: view) { (identifier: ToolIdentifier) in
+            let toolBar = ToolBar(parent: view) { (identifier: ToolIdentifier, button: UIButton) in
                 switch identifier {
                 case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true) { }
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true) { }

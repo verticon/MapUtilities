@@ -10,9 +10,9 @@ import UIKit
 
 class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView where ButtonIdentifier.RawValue == Int  {
 
-    private let buttonHandler: (ButtonIdentifier) -> ()
+    private let buttonHandler: (ButtonIdentifier, UIButton) -> ()
 
-    init(parent: UIView, dismissButton: DismissButton? = nil, buttonHandler: @escaping (ButtonIdentifier) -> ()) {
+    init(parent: UIView, dismissButton: DismissButton? = nil, buttonHandler: @escaping (ButtonIdentifier, UIButton) -> ()) {
 
         func makeShape(with frame: CGRect) -> CAShapeLayer {
             let path = UIBezierPath.init(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight, .bottomRight, .bottomLeft], cornerRadii: CGSize.init(width: 5, height: 5))
@@ -104,6 +104,6 @@ class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView w
             fatalError("Invalid \(ButtonIdentifier.self): \(button.tag)")
         }
 
-        buttonHandler(identifier)
+        buttonHandler(identifier, button)
     }
 }

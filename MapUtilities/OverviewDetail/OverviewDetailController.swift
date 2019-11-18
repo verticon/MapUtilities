@@ -96,7 +96,7 @@ class OverviewDetailController: UIViewController {
                 case dummy
             }
 
-            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier) in
+            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier, button: UIButton) in
                 switch identifier {
                 case .dummy: break
                 }
