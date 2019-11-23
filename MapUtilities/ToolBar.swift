@@ -8,11 +8,39 @@
 
 import UIKit
 
-class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView where ButtonIdentifier.RawValue == Int  {
+class ToolBar<ToolIdentifier> : UIStackView {
 
-    private let buttonHandler: (ButtonIdentifier, UIButton) -> ()
+    typealias Handler = (ToolManager) -> Void
 
-    init(parent: UIView, dismissButton: DismissButton? = nil, buttonHandler: @escaping (ButtonIdentifier, UIButton) -> ()) {
+    class ToolManager {
+
+        let tool: UIControl
+        let id: ToolIdentifier
+
+        var userData: Any?
+
+        private let actionHandler: Handler
+        private let styleChangeHandler: Handler
+
+        fileprivate init(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping Handler, styleChangeHandler: @escaping Handler) {
+            self.tool = tool
+            self.id = id
+            self.actionHandler = actionHandler
+            self.styleChangeHandler = styleChangeHandler
+
+            tool.addTarget(self, action: #selector(toolPressHandler), for: .touchUpInside)
+        }
+
+        fileprivate func userInterfaceStyleChanged() { styleChangeHandler(self) }
+
+        @objc private func toolPressHandler(_ tool: UIControl) { self.actionHandler(self) }
+    }
+
+    // ****************************************************************************************************
+
+    private var managers = [ToolManager]()
+
+    init(parent: UIView) {
 
         func makeShape(with frame: CGRect) -> CAShapeLayer {
             let path = UIBezierPath.init(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight, .bottomRight, .bottomLeft], cornerRadii: CGSize.init(width: 5, height: 5))
@@ -31,18 +59,7 @@ class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView w
             toolbar.layer.shadowPath = path
         }
 
-        func addButtons() {
-            if let button = dismissButton { self.addArrangedSubview(button) }
-            for identifier in ButtonIdentifier.allCases {
-                let button = UIButton(type: .system)
-                button.tag = identifier.rawValue
-                button.addTarget(self, action: #selector(buttonPressHandler), for: .touchUpInside)
-                self.addArrangedSubview(button)
-            }
-        }
-
-        // addToParent depends upon the buttons having already been added; the button count is used in the height constraint
-        func addToParent() {
+        func addToSuperView() {
             self.translatesAutoresizingMaskIntoConstraints = false
             parent.addSubview(self)
 
@@ -50,12 +67,11 @@ class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView w
                 self.topAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.topAnchor, constant: 20),
                 self.rightAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.rightAnchor, constant: -20),
                 self.widthAnchor.constraint(equalToConstant: 35),
-                self.heightAnchor.constraint(equalToConstant: CGFloat(self.arrangedSubviews.count) * 35)
+                self.heightAnchor.constraint(equalToConstant:  35)
            ])
         }
-        // ****************************************************************************************************
 
-        self.buttonHandler = buttonHandler
+        // ****************************************************************************************************
 
         super.init(frame: CGRect.zero)
 
@@ -63,31 +79,33 @@ class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView w
         self.layer.insertSublayer(shape, at: 0)
         addShadow(to: self, using: shape.path!)
 
-        addButtons()
-
-        addToParent()
+        addToSuperView()
 
         self.axis = .vertical
         self.distribution = .fillEqually
-        self.alpha = 0.5
     }
     
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+   
+    func add(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping Handler, styleChangeHandler: @escaping Handler) {
+        self.addArrangedSubview(tool)
 
-    func getButton(for: ButtonIdentifier) -> UIButton {
-        for view in self.arrangedSubviews {
-            guard let button = view as? UIButton, !(button is DismissButton) else { continue }
-            if button.tag == `for`.rawValue { return button }
-        }
-        fatalError("There is not a button for \(`for`)")
+        let heightConstraint = constraints.first(where: { $0.firstAttribute == .height && $0.relation == .equal })
+        heightConstraint?.constant = CGFloat(35 * arrangedSubviews.count)
+        setNeedsLayout()
+
+        managers.append(ToolManager(tool: tool, id: id, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler))
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
 
         if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+
+            print("ToolBar: User interface style changed to \(String(describing: self.traitCollection.userInterfaceStyle))")
+
             guard let shape = self.layer.sublayers?[0] as? CAShapeLayer else { fatalError("No shape layer???") }
             
             switch self.traitCollection.userInterfaceStyle {
@@ -96,14 +114,8 @@ class ToolBar<ButtonIdentifier : RawRepresentable & CaseIterable>: UIStackView w
             }
 
             shape.opacity = 0.5
-        }
-    }
-    
-    @objc private func buttonPressHandler(_ button: UIButton) {
-        guard let identifier = ButtonIdentifier.init(rawValue: button.tag) else {
-            fatalError("Invalid \(ButtonIdentifier.self): \(button.tag)")
-        }
 
-        buttonHandler(identifier, button)
+            for manager in managers { manager.userInterfaceStyleChanged() }
+        }
     }
 }

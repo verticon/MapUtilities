@@ -10,32 +10,19 @@ import UIKit
 
 class DismissButton: UIButton {
 
-    private var controller: UIViewController!
-
-    init(controller: UIViewController) {
-        self.controller = controller
+    init() {
 
         super.init(frame: CGRect.zero)
 
         self.backgroundColor = .clear
         self.layer.cornerRadius = 2.0
         self.clipsToBounds = true
-
-        self.addTarget(self, action: #selector(dismiss(_ :)), for: .touchUpInside)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    @objc private func dismiss(_ button: UIButton) {
-        controller.dismiss(animated: true) { }
-    }
-
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { setNeedsDisplay() }
-    }
-
     override func draw(_ rect: CGRect) { // Draw a return symbol: an arrow consisting of a tip and a right angled shaft.
         guard let context = UIGraphicsGetCurrentContext() else { return }
 

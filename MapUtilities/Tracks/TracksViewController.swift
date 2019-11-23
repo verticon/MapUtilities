@@ -75,25 +75,46 @@ class TracksController: UIViewController {
  
             trackingUser = userTrackingButton.trackingUser
             mapView.showsCompass = false
-}
+        }
 
         do { // Add the toolBar last so that it is on top.
-            enum ToolIdentifier : Int, CaseIterable {
+            enum ToolIdentifier {
+                case dismiss
                 case debug
             }
 
-            let toolBar = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier, button: UIButton) in
-                switch identifier {
+            let toolBar = ToolBar<ToolIdentifier>(parent: view)
+
+            let actionHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+                switch manager.id {
+                case .dismiss: self.dismiss(animated: true, completion: nil)
                 case .debug:
                     self.isDebuggingOn = !self.isDebuggingOn
-                    button.backgroundColor = self.isDebuggingOn ? .black : .clear
-                }
+                    (manager.tool as! UIButton).isSelected = self.isDebuggingOn            }
             }
 
-            let debugButton = toolBar.getButton(for: .debug)
-            let debugImage = UIImage(#imageLiteral(resourceName: "Debug.png")).withRenderingMode(.alwaysOriginal)
-            debugButton.setImage(debugImage, for: .normal)
-            debugButton.alpha = 0.75
+            let styleChangeHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+                switch manager.id {
+                case .dismiss: manager.tool.setNeedsDisplay()
+                case .debug:
+                    let button = manager.tool as! UIButton
+
+                    if manager.userData == nil { manager.userData = button.image(for: .normal) }
+                    let originalImage = manager.userData as! UIImage
+
+                    switch self.traitCollection.userInterfaceStyle {
+                    case .dark: button.imageView!.image = originalImage.lighten(degree: 0.75, maintainTransparency: true)
+                    case .light: button.imageView!.image = originalImage.darken(degree: 0.75, maintainTransparency: true)
+                    default: break
+                    }
+                }
+            }
+            
+            toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+
+            let debugButton = UIButton(type: .system)
+            debugButton.setImage(UIImage(#imageLiteral(resourceName: "Debug.png")).withRenderingMode(.alwaysOriginal), for: .normal)
+            toolBar.add(tool: debugButton, id: .debug, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         do {

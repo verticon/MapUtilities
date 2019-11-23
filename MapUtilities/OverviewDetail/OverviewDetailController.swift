@@ -92,15 +92,25 @@ class OverviewDetailController: UIViewController {
         view.addSubview(dualMapsManager.detail)
 
         do { // Add the toolBar last so that it is on top.
-            enum ToolIdentifier : Int, CaseIterable {
-                case dummy
+            enum ToolIdentifier {
+                case dismiss
             }
 
-            let _ = ToolBar(parent: view, dismissButton: DismissButton(controller: self)) { (identifier: ToolIdentifier, button: UIButton) in
-                switch identifier {
-                case .dummy: break
+            let toolBar = ToolBar<ToolIdentifier>(parent: view)
+
+            let actionHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+                switch manager.id {
+                case .dismiss: self.dismiss(animated: true, completion: nil)
                 }
             }
+
+            let styleChangeHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+                switch manager.id {
+                case .dismiss: manager.tool.setNeedsDisplay()
+                }
+            }
+            
+            toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         var previousOrientation: UIDeviceOrientation?

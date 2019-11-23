@@ -15,6 +15,7 @@
 		E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */; };
 		E1A831F1237AF2EA00DAE8CE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */; };
 		E1A831F4237AF2EA00DAE8CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */; };
+		E1F7A9B22389C6EB0083E73D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F7A9B12389C6EB0083E73D /* Extensions.swift */; };
 		E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A338237B11C600977F7C /* SplitterView.swift */; };
 		E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A339237B11C600977F7C /* ToolBar.swift */; };
 		E1F8A33D237B11C600977F7C /* DualMapsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A33A237B11C600977F7C /* DualMapsManager.swift */; };
@@ -47,6 +48,7 @@
 		E1A831F0237AF2EA00DAE8CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E1A831F3237AF2EA00DAE8CE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E1A831F5237AF2EA00DAE8CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E1F7A9B12389C6EB0083E73D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		E1F8A338237B11C600977F7C /* SplitterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplitterView.swift; sourceTree = "<group>"; };
 		E1F8A339237B11C600977F7C /* ToolBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolBar.swift; sourceTree = "<group>"; };
 		E1F8A33A237B11C600977F7C /* DualMapsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DualMapsManager.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */,
+				E1F7A9B12389C6EB0083E73D /* Extensions.swift */,
 				E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */,
 				E1F8A339237B11C600977F7C /* ToolBar.swift */,
 				E1427F0D238180630019C7B5 /* DismissButton.swift */,
@@ -201,6 +204,7 @@
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
 				E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */,
 				E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */,
+				E1F7A9B22389C6EB0083E73D /* Extensions.swift in Sources */,
 				E14F1C77237C212600FF3E03 /* PresentingController.swift in Sources */,
 				E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
