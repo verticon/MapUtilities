@@ -85,7 +85,7 @@ class TracksController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
                 switch manager.id {
                 case .dismiss: self.dismiss(animated: true, completion: nil)
                 case .debug:
@@ -93,28 +93,34 @@ class TracksController: UIViewController {
                     (manager.tool as! UIButton).isSelected = self.isDebuggingOn            }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
                 switch manager.id {
                 case .dismiss: manager.tool.setNeedsDisplay()
                 case .debug:
-                    let button = manager.tool as! UIButton
-
-                    if manager.userData == nil { manager.userData = button.image(for: .normal) }
                     let originalImage = manager.userData as! UIImage
 
+                    let newImage: UIImage
                     switch self.traitCollection.userInterfaceStyle {
-                    case .dark: button.imageView!.image = originalImage.lighten(degree: 0.75, maintainTransparency: true)
-                    case .light: button.imageView!.image = originalImage.darken(degree: 0.75, maintainTransparency: true)
-                    default: break
+                    case .dark:
+                        guard let image = originalImage.lighten(degree: 0.5, maintainTransparency: true) else { return }
+                        newImage = image
+                    case .light:
+                        newImage = originalImage
+                    default: return
                     }
+
+                    let button = manager.tool as! UIButton
+                    button.setImage(newImage.withRenderingMode(.alwaysOriginal), for: .normal)
                 }
             }
             
-            toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            _ = toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
 
             let debugButton = UIButton(type: .system)
-            debugButton.setImage(UIImage(#imageLiteral(resourceName: "Debug.png")).withRenderingMode(.alwaysOriginal), for: .normal)
-            toolBar.add(tool: debugButton, id: .debug, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let debugImage = UIImage(#imageLiteral(resourceName: "Debug.png"))
+            debugButton.setImage(debugImage.withRenderingMode(.alwaysOriginal), for: .normal)
+            let debugTool = toolBar.add(tool: debugButton, id: .debug, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            debugTool.userData = debugImage
         }
 
         do {

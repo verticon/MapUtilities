@@ -98,19 +98,19 @@ class OverviewDetailController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
                 switch manager.id {
                 case .dismiss: self.dismiss(animated: true, completion: nil)
                 }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
                 switch manager.id {
                 case .dismiss: manager.tool.setNeedsDisplay()
                 }
             }
             
-            toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            _ = toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         var previousOrientation: UIDeviceOrientation?

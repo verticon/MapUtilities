@@ -8,21 +8,57 @@
 
 import UIKit
 
+protocol Tool : class {
+    associatedtype Identifier
+
+    var tool: UIControl { get }
+    var id: Identifier { get }
+    var userData: Any? { get set }
+}
+
+private extension Tool {
+    func getTool() -> UIControl { return tool }
+    func getId() -> Identifier { return id }
+    func getUserData() -> Any? { return userData }
+    func setUserData(newData: Any? ) {  userData = newData }
+}
+
+class AnyTool<Identifier> : Tool {
+    
+    private var getTool: () -> UIControl
+    private var getId: () -> Identifier
+    private var getUserData: () -> Any?
+    private var setUserData: (Any?) -> ()
+
+    init<ToolType:Tool>(tool: ToolType) where ToolType.Identifier == Identifier {
+        getTool = tool.getTool
+        getId = tool.getId
+        getUserData = tool.getUserData
+        setUserData = tool.setUserData
+    }
+
+    var tool: UIControl { return getTool() }
+    var id: Identifier { return getId() }
+    var userData: Any? {
+        get { return getUserData() }
+        set { setUserData(newValue) }
+    }
+}
+
 class ToolBar<ToolIdentifier> : UIStackView {
 
-    typealias Handler = (ToolManager) -> Void
+    typealias EventHandler = (ToolManager) -> Void
 
-    class ToolManager {
+    class ToolManager : Tool {
 
         let tool: UIControl
         let id: ToolIdentifier
-
         var userData: Any?
 
-        private let actionHandler: Handler
-        private let styleChangeHandler: Handler
+        private let actionHandler: EventHandler
+        private let styleChangeHandler: EventHandler
 
-        fileprivate init(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping Handler, styleChangeHandler: @escaping Handler) {
+        fileprivate init(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) {
             self.tool = tool
             self.id = id
             self.actionHandler = actionHandler
@@ -89,22 +125,22 @@ class ToolBar<ToolIdentifier> : UIStackView {
         fatalError("init(coder:) has not been implemented")
     }
    
-    func add(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping Handler, styleChangeHandler: @escaping Handler) {
+    func add(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) -> AnyTool<ToolIdentifier> {
         self.addArrangedSubview(tool)
 
         let heightConstraint = constraints.first(where: { $0.firstAttribute == .height && $0.relation == .equal })
         heightConstraint?.constant = CGFloat(35 * arrangedSubviews.count)
         setNeedsLayout()
 
-        managers.append(ToolManager(tool: tool, id: id, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler))
+        let manager = ToolManager(tool: tool, id: id, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+        managers.append(manager)
+        return AnyTool(tool: manager)
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
 
         if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
-
-            print("ToolBar: User interface style changed to \(String(describing: self.traitCollection.userInterfaceStyle))")
 
             guard let shape = self.layer.sublayers?[0] as? CAShapeLayer else { fatalError("No shape layer???") }
             

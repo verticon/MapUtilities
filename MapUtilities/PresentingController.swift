@@ -37,33 +37,42 @@ class PresentingController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.Handler = { manager in
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
                 switch manager.id {
                 case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true)
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
                 }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.Handler = { manager in
-                let button = manager.tool as! UIButton
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
 
-                if manager.userData == nil { manager.userData = button.image(for: .normal) }
                 let originalImage = manager.userData as! UIImage
-                
+
+                let newImage: UIImage
                 switch self.traitCollection.userInterfaceStyle {
-                case .dark: button.imageView!.image = originalImage.lighten(degree: 1.0, maintainTransparency: true)
-                case .light: button.imageView!.image = originalImage.darken(degree: 0.75, maintainTransparency: true)
-                default: break
+                case .dark:
+                    guard let image = originalImage.lighten(degree: 0.5, maintainTransparency: true) else { return }
+                    newImage = image
+                case .light:
+                    newImage = originalImage//.darken(degree: 0.5, maintainTransparency: true)
+                default: return
                 }
+
+                let button = manager.tool as! UIButton
+                button.setImage(newImage.withRenderingMode(.alwaysOriginal), for: .normal)
             }
                
             let overviewDetailButton = UIButton(type: .system)
-            overviewDetailButton.setImage(UIImage(#imageLiteral(resourceName: "Magnify.png")).withRenderingMode(.alwaysOriginal), for: .normal)
-            toolBar.add(tool: overviewDetailButton, id: .overviewDetail, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let overviewDetailImage = UIImage(#imageLiteral(resourceName: "Magnify.png"))
+            overviewDetailButton.setImage(overviewDetailImage.withRenderingMode(.alwaysOriginal), for: .normal)
+            let overviewDetaiTool = toolBar.add(tool: overviewDetailButton, id: .overviewDetail, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            overviewDetaiTool.userData = overviewDetailImage
 
             let tracksButton = UIButton(type: .system)
-            tracksButton.setImage(UIImage(#imageLiteral(resourceName: "Polyline")).withRenderingMode(.alwaysOriginal), for: .normal)
-            toolBar.add(tool: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let tracksButtonImage = UIImage(#imageLiteral(resourceName: "Polyline"))
+            tracksButton.setImage(tracksButtonImage.withRenderingMode(.alwaysOriginal), for: .normal)
+            let tracksButtonTool = toolBar.add(tool: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            tracksButtonTool.userData = tracksButtonImage
         }
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
