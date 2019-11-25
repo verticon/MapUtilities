@@ -78,21 +78,18 @@ class PresentingController: UIViewController {
         _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
     }
 
+    private var initialSetupCompleted = false
     private func userLocationEventHandler(event: UserLocationEvent) {
 
-        var zoomedToUser = false
-        let performInitialZoom = { (userLocation: CLLocation) in
-            guard !zoomedToUser else { return }
-
-            let initialSpan: CLLocationDistance = 100000
-            self.map.region = MKCoordinateRegion(center: userLocation.coordinate, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
-            self.map.showsUserLocation = true
-
-            zoomedToUser = true
-        }
-
         switch event {
-        case .locationUpdate(let userLocation): performInitialZoom(userLocation)
+        case .locationUpdate(let userLocation):
+            if !self.initialSetupCompleted {
+                let initialSpan: CLLocationDistance = 100000
+                self.map.region = MKCoordinateRegion(center: userLocation.coordinate, latitudinalMeters: initialSpan, longitudinalMeters: initialSpan)
+                self.map.showsUserLocation = true
+
+                self.initialSetupCompleted = true
+            }
         case .authorizationUpdate(let authorization):
             switch authorization {
             case .restricted: fallthrough
@@ -101,14 +98,6 @@ class PresentingController: UIViewController {
             }
 
         default: break
-        }
-    }
-
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-
-        if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
-            print("Presenting VC: User interface style changed to \(String(describing: self.traitCollection.userInterfaceStyle))")
         }
     }
 }
