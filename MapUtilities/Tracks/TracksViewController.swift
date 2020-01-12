@@ -85,19 +85,19 @@ class TracksController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
-                switch manager.id {
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+                switch tool.id {
                 case .dismiss: self.dismiss(animated: true, completion: nil)
                 case .debug:
                     self.isDebuggingOn = !self.isDebuggingOn
-                    (manager.tool as! UIButton).isSelected = self.isDebuggingOn            }
+                    (tool.control as! UIButton).isSelected = self.isDebuggingOn            }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
-                switch manager.id {
-                case .dismiss: manager.tool.setNeedsDisplay()
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+                switch tool.id {
+                case .dismiss: tool.control.setNeedsDisplay()
                 case .debug:
-                    let originalImage = manager.userData as! UIImage
+                    let originalImage = tool.userData as! UIImage
 
                     let newImage: UIImage
                     switch self.traitCollection.userInterfaceStyle {
@@ -109,17 +109,17 @@ class TracksController: UIViewController {
                     default: return
                     }
 
-                    let button = manager.tool as! UIButton
+                    let button = tool.control as! UIButton
                     button.setImage(newImage.withRenderingMode(.alwaysOriginal), for: .normal)
                 }
             }
             
-            _ = toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
 
             let debugButton = UIButton(type: .system)
             let debugImage = UIImage(#imageLiteral(resourceName: "Debug.png"))
             debugButton.setImage(debugImage.withRenderingMode(.alwaysOriginal), for: .normal)
-            let debugTool = toolBar.add(tool: debugButton, id: .debug, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let debugTool = toolBar.add(control: debugButton, id: .debug, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
             debugTool.userData = debugImage
         }
 

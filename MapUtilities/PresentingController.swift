@@ -37,16 +37,16 @@ class PresentingController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
-                switch manager.id {
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+                switch tool.id {
                 case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true)
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
                 }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
 
-                let originalImage = manager.userData as! UIImage
+                let originalImage = tool.userData as! UIImage
 
                 let newImage: UIImage
                 switch self.traitCollection.userInterfaceStyle {
@@ -58,20 +58,20 @@ class PresentingController: UIViewController {
                 default: return
                 }
 
-                let button = manager.tool as! UIButton
+                let button = tool.control as! UIButton
                 button.setImage(newImage.withRenderingMode(.alwaysOriginal), for: .normal)
             }
                
             let overviewDetailButton = UIButton(type: .system)
             let overviewDetailImage = UIImage(#imageLiteral(resourceName: "Magnify.png"))
             overviewDetailButton.setImage(overviewDetailImage.withRenderingMode(.alwaysOriginal), for: .normal)
-            let overviewDetaiTool = toolBar.add(tool: overviewDetailButton, id: .overviewDetail, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let overviewDetaiTool = toolBar.add(control: overviewDetailButton, id: .overviewDetail, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
             overviewDetaiTool.userData = overviewDetailImage
 
             let tracksButton = UIButton(type: .system)
             let tracksButtonImage = UIImage(#imageLiteral(resourceName: "Polyline"))
             tracksButton.setImage(tracksButtonImage.withRenderingMode(.alwaysOriginal), for: .normal)
-            let tracksButtonTool = toolBar.add(tool: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            let tracksButtonTool = toolBar.add(control: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
             tracksButtonTool.userData = tracksButtonImage
         }
 

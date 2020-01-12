@@ -86,7 +86,6 @@ class SplitterView: UIView {
     // ****************************************************************************************************************
 
     private lazy var adapter: ((UIDeviceOrientation) -> Void)! = {
-
         // The TouchView class is a part of the Splitter's implementation: its existence does not need to be known externally.
         // BUT, we need it to be on top so that it can be touched This Z ordering would normally be handled by the code that
         // is adding views to the root view. We do it here. It only happens once. It feels kludgey. Sigh ...
@@ -159,9 +158,7 @@ class SplitterView: UIView {
             self.touchView.adapt(to: newOrientation)
         }
     }()
-    func adapt(to newOrientation: UIDeviceOrientation) {
-        adapter(newOrientation)
-    }
+    func adapt(to newOrientation: UIDeviceOrientation) { adapter(newOrientation) }
 
     // ****************************************************************************************************************
     // Utilities

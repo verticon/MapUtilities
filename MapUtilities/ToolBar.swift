@@ -11,33 +11,33 @@ import UIKit
 protocol Tool : class {
     associatedtype Identifier
 
-    var tool: UIControl { get }
+    var control: UIControl { get }
     var id: Identifier { get }
     var userData: Any? { get set }
 }
 
-private extension Tool {
-    func getTool() -> UIControl { return tool }
+private extension Tool { // These methods allow AnyTool to erasure the properties
+    func getControl() -> UIControl { return control }
     func getId() -> Identifier { return id }
     func getUserData() -> Any? { return userData }
     func setUserData(newData: Any? ) {  userData = newData }
 }
 
-class AnyTool<Identifier> : Tool {
+class AnyTool<Identifier> : Tool { // AnyTool allows an instance of the Tool protocol to be returned to the ToolBar user.
     
-    private var getTool: () -> UIControl
+    private var getControl: () -> UIControl
     private var getId: () -> Identifier
     private var getUserData: () -> Any?
     private var setUserData: (Any?) -> ()
 
-    init<ToolType:Tool>(tool: ToolType) where ToolType.Identifier == Identifier {
-        getTool = tool.getTool
+    fileprivate init<SomeTool: Tool>(tool: SomeTool) where SomeTool.Identifier == Identifier {
+        getControl = tool.getControl
         getId = tool.getId
         getUserData = tool.getUserData
         setUserData = tool.setUserData
     }
 
-    var tool: UIControl { return getTool() }
+    var control: UIControl { return getControl() }
     var id: Identifier { return getId() }
     var userData: Any? {
         get { return getUserData() }
@@ -47,34 +47,36 @@ class AnyTool<Identifier> : Tool {
 
 class ToolBar<ToolIdentifier> : UIStackView {
 
-    typealias EventHandler = (ToolManager) -> Void
+    typealias EventHandler = (AnyTool<ToolIdentifier>) -> Void
 
-    class ToolManager : Tool {
+    private class ToolBarTool : Tool { // This Tool adopter will be type erased by AnyTool
 
-        let tool: UIControl
+        let control: UIControl
         let id: ToolIdentifier
         var userData: Any?
+
+        var anyTool: AnyTool<ToolIdentifier>!
 
         private let actionHandler: EventHandler
         private let styleChangeHandler: EventHandler
 
-        fileprivate init(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) {
-            self.tool = tool
+        fileprivate init(control: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) {
+            self.control = control
             self.id = id
             self.actionHandler = actionHandler
             self.styleChangeHandler = styleChangeHandler
 
-            tool.addTarget(self, action: #selector(toolPressHandler), for: .touchUpInside)
+            control.addTarget(self, action: #selector(toolPressHandler), for: .touchUpInside)
         }
 
-        fileprivate func userInterfaceStyleChanged() { styleChangeHandler(self) }
+        fileprivate func userInterfaceStyleChanged() { styleChangeHandler(anyTool) }
 
-        @objc private func toolPressHandler(_ tool: UIControl) { self.actionHandler(self) }
+        @objc private func toolPressHandler(_ tool: UIControl) { self.actionHandler(anyTool) }
     }
 
     // ****************************************************************************************************
 
-    private var managers = [ToolManager]()
+    private var tools = [ToolBarTool]()
 
     init(parent: UIView) {
 
@@ -115,6 +117,10 @@ class ToolBar<ToolIdentifier> : UIStackView {
         self.layer.insertSublayer(shape, at: 0)
         addShadow(to: self, using: shape.path!)
 
+        self.layer.borderColor = UIColor.white.cgColor
+        self.layer.borderWidth = 2
+        self.layer.cornerRadius = 5
+        
         addToSuperView()
 
         self.axis = .vertical
@@ -125,16 +131,18 @@ class ToolBar<ToolIdentifier> : UIStackView {
         fatalError("init(coder:) has not been implemented")
     }
    
-    func add(tool: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) -> AnyTool<ToolIdentifier> {
-        self.addArrangedSubview(tool)
+    func add(control: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) -> AnyTool<ToolIdentifier> {
+        self.addArrangedSubview(control)
 
         let heightConstraint = constraints.first(where: { $0.firstAttribute == .height && $0.relation == .equal })
         heightConstraint?.constant = CGFloat(35 * arrangedSubviews.count)
         setNeedsLayout()
 
-        let manager = ToolManager(tool: tool, id: id, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
-        managers.append(manager)
-        return AnyTool(tool: manager)
+        let toolBarTool = ToolBarTool(control: control, id: id, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+        toolBarTool.anyTool = AnyTool(tool: toolBarTool)
+        tools.append(toolBarTool)
+        
+        return toolBarTool.anyTool
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
@@ -151,7 +159,7 @@ class ToolBar<ToolIdentifier> : UIStackView {
 
             shape.opacity = 0.5
 
-            for manager in managers { manager.userInterfaceStyleChanged() }
+            for tool in tools { tool.userInterfaceStyleChanged() }
         }
     }
 }

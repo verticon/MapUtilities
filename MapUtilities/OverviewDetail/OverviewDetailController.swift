@@ -78,7 +78,9 @@ class OverviewDetailController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    deinit { print("Deinit") }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -98,24 +100,31 @@ class OverviewDetailController: UIViewController {
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
 
-            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
-                switch manager.id {
-                case .dismiss: self.dismiss(animated: true, completion: nil)
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
+                switch tool.id {
+                case .dismiss: self?.dismiss(animated: true, completion: nil)
                 }
             }
 
-            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { manager in
-                switch manager.id {
-                case .dismiss: manager.tool.setNeedsDisplay()
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+                switch tool.id {
+                case .dismiss: tool.control.setNeedsDisplay()
                 }
             }
             
-            _ = toolBar.add(tool: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         var previousOrientation: UIDeviceOrientation?
-        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { _ in
-            
+        var notificationObserver: NSObjectProtocol?
+        notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
+            print("Orientation change notification: \(UIDevice.current.orientation)")
+
+            guard let controller = self else {
+                if let observer = notificationObserver { NotificationCenter.default.removeObserver(observer) }
+                return
+            }
+
             let newOrientation = UIDevice.current.orientation
             guard newOrientation != previousOrientation else { return }
             
@@ -128,14 +137,15 @@ class OverviewDetailController: UIViewController {
 
             previousOrientation = newOrientation
 
-            if let current = self.currentConstraints { NSLayoutConstraint.deactivate(current) }
-            self.currentConstraints = nil // The new constraints will be set in viewDidLayoutSubviews(); see the comments there.
+            if let current = controller.currentConstraints { NSLayoutConstraint.deactivate(current) }
+            controller.currentConstraints = nil // The new constraints will be set in viewDidLayoutSubviews(); see the comments there.
 
             // When the device's orientation changes between portrait, landscape left, and landscape right iOS performs
             // view layout (viewWillLayoutSubviews() is called). However, when the device passes through the upside down
             // position, on its way to landscape left or lanscape right, then layout does not occur (tested on iOS 13).
-            self.view.setNeedsLayout()
+            controller.view.setNeedsLayout()
         }
+        print("Initial orientation: \(UIDevice.current.orientation)")
     }
 
     // Wait until viewWillLayoutSubviews to put the new constraints in place.
@@ -145,7 +155,8 @@ class OverviewDetailController: UIViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
 
-        if currentConstraints == nil { // It is initially nil, and the orientationDidChangeNotification handler (see viewDidLoad()) sets it to nil
+        // It is initially nil, and the orientationDidChangeNotification handler (see viewDidLoad()) sets it to nil
+        if currentConstraints == nil {
 
             switch UIDevice.current.orientation {
             case .unknown: fallthrough
@@ -157,7 +168,9 @@ class OverviewDetailController: UIViewController {
             case .landscapeRight: currentConstraints = landscapeRightConstraints
             case .landscapeLeft: currentConstraints = landscapeLeftConstraints
 
-            @unknown default: print("Unsupported orientation")
+            @unknown default:
+                print("A new device orientation has been added")
+                return
             }
 
             NSLayoutConstraint.activate(currentConstraints)
@@ -165,5 +178,4 @@ class OverviewDetailController: UIViewController {
             splitter.adapt(to: UIDevice.current.orientation)
         }
     }
-
 }
