@@ -8,6 +8,7 @@
 
 import UIKit
 import Darwin
+import VerticonsToolbox
 
 // Note: It was discovered that the superview is not guaranteed to have already been rotated
 // to the new orientation at the time of the orientation change notification. The main screen,
@@ -27,7 +28,6 @@ class SplitterView: UIView {
     init() {
         super.init(frame: CGRect.zero)
 
-        // The touch view needs to be on top
         touchView.translatesAutoresizingMaskIntoConstraints = false
         touchView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(panGestureHandler(_:))))
     }
@@ -36,11 +36,13 @@ class SplitterView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // The touch view needs to be on top
     override func didMoveToSuperview() {
         superview?.addSubview(touchView)
     }
 
-    // Note: The following two closures, handler and adapter, each "capture" (close over) a set of variables.
+
+    // Note: The following two closures, handler and layout, each "capture" (close over) a set of variables.
     // These variables might have otherwise been implemented as member properties of the Splitter class. Closures
     // are used so as to limit the scop of those variables to the single code block that needs to access them.
     // Question: Is there a cost to using this scoping technique?
@@ -69,7 +71,7 @@ class SplitterView: UIView {
 
                 // Whether in potrait or in landscape we are operating off of the maximum dimension.
                 let maxDimension = UIScreen.main.bounds.height > UIScreen.main.bounds.width  ? UIScreen.main.bounds.height : UIScreen.main.bounds.width
-                let maxOffset = maxDimension/2 - TouchView.thickness
+                let maxOffset = maxDimension/2 - 2*TouchView.thickness
 
                 self.centerConstraintConstant = abs(newConstant) < maxOffset ? newConstant : (newConstant > 0 ? maxOffset : -maxOffset)
                 centerConstraint.constant = self.centerConstraintConstant
@@ -85,7 +87,7 @@ class SplitterView: UIView {
     // (i.e. those appropriate to the new orientation) have already been put in place.
     // ****************************************************************************************************************
 
-    private lazy var adapter: ((UIDeviceOrientation) -> Void)! = {
+    private lazy var layout: (() -> Void) = {
         // The TouchView class is a part of the Splitter's implementation: its existence does not need to be known externally.
         // BUT, we need it to be on top so that it can be touched This Z ordering would normally be handled by the code that
         // is adding views to the root view. We do it here. It only happens once. It feels kludgey. Sigh ...
@@ -99,35 +101,31 @@ class SplitterView: UIView {
             self.touchView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             self.touchView.heightAnchor.constraint(equalToConstant: TouchView.thickness),
         ]
-        var landscapeRightConstraints: [NSLayoutConstraint] = [
+        var landscapeConstraints: [NSLayoutConstraint] = [
             self.touchView.topAnchor.constraint(equalTo: self.topAnchor),
             self.touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
             self.touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-        ]
-        var landscapeLeftConstraints: [NSLayoutConstraint] = [
-            self.touchView.topAnchor.constraint(equalTo: self.topAnchor),
-            self.touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-            self.touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+            //self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
+            self.touchView.widthAnchor.constraint(equalToConstant: 400),
         ]
 
-        var currentOrientation: UIDeviceOrientation?
-
-
-        return { newOrientation in
+        var previousOrientation: UIDeviceOrientation?
+        return {
             // Determine whether, in the new orientation, the constaint's offset from the center is positive or negative.
             // Example: If the old orientation was potrait and the splitter had been moved toward the top then the
             // value of its center constarint's constant would be negative (i.e. in the -y direction). To achieve
             // the same relative position in a landscape right orientation would require the splitter to be moved
             // to the right using a positive value for the constraint's constant (i.e. in the +x direction).
-            func updateSign() {
+            func updateSign(_ orientation: UIDeviceOrientation) {
                 let wasNegative = self.centerConstraintConstant < 0
                 var isNegative = wasNegative
-                switch currentOrientation {
+
+                switch previousOrientation {
                 case .portrait: fallthrough
-                case .landscapeLeft: if newOrientation == .landscapeRight { isNegative = !wasNegative }
+                case .landscapeLeft: if orientation == .landscapeRight { isNegative = !wasNegative }
+
                 case .landscapeRight: isNegative = !wasNegative
+
                 default: break
                 }
                 self.centerConstraintConstant = (isNegative ? -1 : 1) * abs(self.centerConstraintConstant)
@@ -135,30 +133,34 @@ class SplitterView: UIView {
                 self.getCenterConstraint().constant = self.centerConstraintConstant
             }
 
-            func updateConstraints() {
+            func updateConstraints(_ orientation: UIDeviceOrientation) {
                 if let current = currentConstraints {
                     NSLayoutConstraint.deactivate(current)
                     currentConstraints = nil
                 }
 
-                switch newOrientation {
+                switch orientation {
                 case .portrait: currentConstraints = potraitConstraints
-                case .landscapeLeft: currentConstraints = landscapeLeftConstraints
-                case .landscapeRight: currentConstraints = landscapeRightConstraints
+
+                case .landscapeLeft: fallthrough
+                case .landscapeRight: currentConstraints = landscapeConstraints
                 default: return
                 }
 
                 NSLayoutConstraint.activate(currentConstraints!)
             }
 
-            updateConstraints()
-            updateSign()
-            currentOrientation = newOrientation
+            let orientation = getOrientation()
+            print("SplitterView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
 
-            self.touchView.adapt(to: newOrientation)
+            updateConstraints(orientation)
+            updateSign(orientation)
+            previousOrientation = orientation
+
+            self.touchView.setNeedsDisplay()
         }
     }()
-    func adapt(to newOrientation: UIDeviceOrientation) { adapter(newOrientation) }
+    override func layoutSubviews() { layout() }
 
     // ****************************************************************************************************************
     // Utilities
@@ -192,12 +194,9 @@ private class TouchView : UIView {
         fatalError("init(coder:) has not been implemented")
     }
  
-    func adapt(to newOrientation: UIDeviceOrientation) {
-        setNeedsDisplay() // Redraw the arrows; up/down vs left/right
-    }
-
     // Add up and down, or left and right, pointing triangles to the splitter.
     override func draw(_ rect: CGRect) {
+        print("TouchView - Draw()")
 
         guard let context = UIGraphicsGetCurrentContext() else { return }
         context.setFillColor(UIColor.black.cgColor)
@@ -206,7 +205,7 @@ private class TouchView : UIView {
         let separation: CGFloat = 1
         let apex = SplitterView.thickness/2 + separation + side
 
-        if UIDevice.current.orientation == .portrait {
+        if getOrientation() == .portrait {
             let startX = self.bounds.midX
 
             // Upward pointing triangle above splitter

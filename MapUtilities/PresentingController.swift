@@ -33,6 +33,7 @@ class PresentingController: UIViewController {
             enum ToolIdentifier {
                 case overviewDetail
                 case tracks
+                case test
             }
 
             let toolBar = ToolBar<ToolIdentifier>(parent: view)
@@ -41,12 +42,13 @@ class PresentingController: UIViewController {
                 switch tool.id {
                 case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true)
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
+                case .test: self.present(TestController(), animated: true)
                 }
             }
 
             let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
 
-                let originalImage = tool.userData as! UIImage
+                guard let originalImage = tool.userData as? UIImage else { return }
 
                 let newImage: UIImage
                 switch self.traitCollection.userInterfaceStyle {
@@ -73,6 +75,10 @@ class PresentingController: UIViewController {
             tracksButton.setImage(tracksButtonImage.withRenderingMode(.alwaysOriginal), for: .normal)
             let tracksButtonTool = toolBar.add(control: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
             tracksButtonTool.userData = tracksButtonImage
+
+            let testButton = UIButton(type: .system)
+            testButton.backgroundColor = .gray
+            _ = toolBar.add(control: testButton, id: .test, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)
