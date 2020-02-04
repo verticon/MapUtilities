@@ -12,14 +12,6 @@ import VerticonsToolbox
 
 class DualMapsManager : NSObject {
 
-    private class DetailAnnotation : MKPointAnnotation {
-        override var coordinate: CLLocationCoordinate2D {
-            didSet {
-                print("Annotation coordinate set to \(coordinate)")
-            }
-        }
-    }
-
     private class DetailAnnotationView : MKAnnotationView {
         static let reuseIdentifier = "Detail"
 
@@ -61,7 +53,7 @@ class DualMapsManager : NSObject {
     let overviewMap = MKMapView()
     let detailMap = MKMapView()
 
-    private let detailAnnotation = DetailAnnotation(__coordinate: CLLocationCoordinate2D.zero)
+    private let detailAnnotation = MKPointAnnotation(__coordinate: CLLocationCoordinate2D.zero)
 
     private var observers = [NSKeyValueObservation]()
 
@@ -110,12 +102,10 @@ class DualMapsManager : NSObject {
 
     @objc func longPressGestureHandler(_ recognizer: UILongPressGestureRecognizer) {
         switch recognizer.state {
-        case .began: print("Panning begun")
         case .changed:
             guard let annotationView = overviewMap.view(for: detailAnnotation) else { fatalError("Cannot get detail annotation's view") }
             detailMap.region.center = overviewMap.convert(recognizer.location(in: annotationView), toCoordinateFrom: annotationView)
-            print("Detail map rpositioned to \(detailMap.region.center)")
-        case .ended: print("Panning ended")
+            //print("Detail map repositioned to \(detailMap.region.center)")
         default: break
         }
     }
@@ -130,7 +120,6 @@ extension DualMapsManager : MKMapViewDelegate {
         if annotationView == nil {
             annotationView = DetailAnnotationView(annotation: nil)
             annotationView!.isDraggable = true
-            //let recognizer = UIPanGestureRecognizer(target: self, action: #selector(panGestureHandler(_:)))
             let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGestureHandler))
             recognizer.allowableMovement = CGFloat.infinity
             recognizer.delegate = self
@@ -146,31 +135,4 @@ extension DualMapsManager : UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return gestureRecognizer is UILongPressGestureRecognizer && gestureRecognizer.delegate === self && otherGestureRecognizer is UILongPressGestureRecognizer
     }
-/*
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        print("gestureRecognizerShouldBegin")
-        return true
-    }
-
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-           print("shouldRequireFailureOf")
-           return false
-       }
-
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-           print("shouldBeRequiredToFailBy")
-           return false
-       }
-
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-           print("shouldReceive touch")
-           return true
-       }
-
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive press: UIPress) -> Bool {
-           print("shouldReceive press")
-           return true
-       }
-*/
-    
 }
