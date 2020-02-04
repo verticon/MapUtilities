@@ -121,7 +121,7 @@ class OverviewDetailController: UIViewController {
     deinit { print("OverviewDetailController Deinit") }
 
     override func loadView() {
-        view = OverviewDetailView(overview: dualMapsManager.overview, detail: dualMapsManager.detail)
+        view = OverviewDetailView(overview: dualMapsManager.overviewMap, detail: dualMapsManager.detailMap)
     }
 
     override func viewDidLoad() {

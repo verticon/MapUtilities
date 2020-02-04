@@ -12,6 +12,14 @@ import VerticonsToolbox
 
 class DualMapsManager : NSObject {
 
+    private class DetailAnnotation : MKPointAnnotation {
+        override var coordinate: CLLocationCoordinate2D {
+            didSet {
+                print("Annotation coordinate set to \(coordinate)")
+            }
+        }
+    }
+
     private class DetailAnnotationView : MKAnnotationView {
         static let reuseIdentifier = "Detail"
 
@@ -36,13 +44,13 @@ class DualMapsManager : NSObject {
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
-        
+
         override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
             if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { setColors() }
         }
 
         func updateBounds(_ dualMaps: DualMapsManager) {
-            var newBounds = dualMaps.overview.convert(dualMaps.detail.region, toRectTo: dualMaps.overview)
+            var newBounds = dualMaps.overviewMap.convert(dualMaps.detailMap.region, toRectTo: dualMaps.overviewMap)
             newBounds.size = CGSize(width: max(newBounds.width, 20), height: max(newBounds.height, 20))
             bounds = newBounds
         }
@@ -50,10 +58,10 @@ class DualMapsManager : NSObject {
 
     private static let spanRatio = 10.0
 
-    let overview = MKMapView()
-    let detail = MKMapView()
+    let overviewMap = MKMapView()
+    let detailMap = MKMapView()
 
-    private let detailAnnotation = MKPointAnnotation(__coordinate: CLLocationCoordinate2D.zero)
+    private let detailAnnotation = DetailAnnotation(__coordinate: CLLocationCoordinate2D.zero)
 
     private var observers = [NSKeyValueObservation]()
 
@@ -67,14 +75,14 @@ class DualMapsManager : NSObject {
             observers.append(map.observe(\.bounds, options: [.new]) { mapView, change in self.updateAnnotation() })
         }
 
-        setup(map: overview)
-        setup(map: detail)
+        setup(map: overviewMap)
+        setup(map: detailMap)
 
-        overview.region = initialOverviewRegion
-        detail.region = initialOverviewRegion / DualMapsManager.spanRatio
+        overviewMap.region = initialOverviewRegion
+        detailMap.region = initialOverviewRegion / DualMapsManager.spanRatio
 
-        detailAnnotation.coordinate = detail.region.center
-        overview.addAnnotation(detailAnnotation)
+        detailAnnotation.coordinate = detailMap.region.center
+        overviewMap.addAnnotation(detailAnnotation)
     }
     
     required init?(coder: NSCoder) {
@@ -82,21 +90,33 @@ class DualMapsManager : NSObject {
     }
 
     private func updateAnnotation() { // Update the annotation's center and bounds to match the detail view.
-        detailAnnotation.coordinate = detail.region.center
-        if let annotationView = overview.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
+        detailAnnotation.coordinate = detailMap.region.center
+        if let annotationView = overviewMap.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
     }
 
     @objc func tapGestureHandler(_ recognizer: UITapGestureRecognizer) {
         guard let mapView = recognizer.view as? MKMapView else { return }
         
-        if mapView == overview {
-            let touchPoint = recognizer.location(in: overview)
-            let touchCoordinate = overview.convert(touchPoint, toCoordinateFrom: overview)
-            overview.region.center = touchCoordinate
-            detail.region = overview.region / DualMapsManager.spanRatio
+        if mapView == overviewMap { // Center both maps on the tap point
+            let touchPoint = recognizer.location(in: overviewMap)
+            let touchCoordinate = overviewMap.convert(touchPoint, toCoordinateFrom: overviewMap)
+            overviewMap.region.center = touchCoordinate
+            detailMap.region = overviewMap.region / DualMapsManager.spanRatio
         }
-        else {
-            overview.region = DualMapsManager.spanRatio * detail.region
+        else { // Center the Overview map on the Detail map
+            overviewMap.region = DualMapsManager.spanRatio * detailMap.region
+        }
+    }
+
+    @objc func longPressGestureHandler(_ recognizer: UILongPressGestureRecognizer) {
+        switch recognizer.state {
+        case .began: print("Panning begun")
+        case .changed:
+            guard let annotationView = overviewMap.view(for: detailAnnotation) else { fatalError("Cannot get detail annotation's view") }
+            detailMap.region.center = overviewMap.convert(recognizer.location(in: annotationView), toCoordinateFrom: annotationView)
+            print("Detail map rpositioned to \(detailMap.region.center)")
+        case .ended: print("Panning ended")
+        default: break
         }
     }
 }
@@ -106,9 +126,51 @@ extension DualMapsManager : MKMapViewDelegate {
     func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { updateAnnotation() }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        var annotationView = overview.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
-        if annotationView == nil { annotationView = DetailAnnotationView(annotation: nil) }
+        var annotationView = overviewMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
+        if annotationView == nil {
+            annotationView = DetailAnnotationView(annotation: nil)
+            annotationView!.isDraggable = true
+            //let recognizer = UIPanGestureRecognizer(target: self, action: #selector(panGestureHandler(_:)))
+            let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGestureHandler))
+            recognizer.allowableMovement = CGFloat.infinity
+            recognizer.delegate = self
+            annotationView!.addGestureRecognizer(recognizer)
+        }
         annotationView!.updateBounds(self)
         return annotationView
     }
+}
+
+extension DualMapsManager : UIGestureRecognizerDelegate {
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return gestureRecognizer is UILongPressGestureRecognizer && gestureRecognizer.delegate === self && otherGestureRecognizer is UILongPressGestureRecognizer
+    }
+/*
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        print("gestureRecognizerShouldBegin")
+        return true
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+           print("shouldRequireFailureOf")
+           return false
+       }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+           print("shouldBeRequiredToFailBy")
+           return false
+       }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+           print("shouldReceive touch")
+           return true
+       }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive press: UIPress) -> Bool {
+           print("shouldReceive press")
+           return true
+       }
+*/
+    
 }
