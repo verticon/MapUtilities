@@ -150,14 +150,23 @@ class OverviewDetailController: UIViewController {
         }
 
 
+        var previousOrientation: UIDeviceOrientation = .unknown
         var notificationObserver: NSObjectProtocol?
         notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
-            print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(UIDevice.current.orientation))")
+            let newOrientation = UIDevice.current.orientation
+            print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
 
-            if self == nil, let observer = notificationObserver {
-                NotificationCenter.default.removeObserver(observer)
-                notificationObserver = nil
+            guard self != nil else  {
+                if let observer = notificationObserver {
+                    NotificationCenter.default.removeObserver(observer)
+                    notificationObserver = nil
+                }
+                return
             }
+
+            // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
+            if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
+            previousOrientation = newOrientation
         }
     }
 }

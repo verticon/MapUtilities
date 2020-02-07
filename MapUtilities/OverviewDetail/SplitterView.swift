@@ -28,6 +28,8 @@ class SplitterView: UIView {
     init() {
         super.init(frame: CGRect.zero)
 
+        backgroundColor = .black
+
         touchView.translatesAutoresizingMaskIntoConstraints = false
         touchView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(panGestureHandler(_:))))
     }
@@ -70,7 +72,7 @@ class SplitterView: UIView {
                 let newConstant = initialConstant + (centerConstraint.firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
 
                 // Whether in potrait or in landscape we are operating off of the maximum dimension.
-                let maxDimension = UIScreen.main.bounds.height > UIScreen.main.bounds.width  ? UIScreen.main.bounds.height : UIScreen.main.bounds.width
+                let maxDimension = self.superview!.bounds.height > self.superview!.bounds.width  ? self.superview!.bounds.height : self.superview!.bounds.width
                 let maxOffset = maxDimension/2 - 2*TouchView.thickness
 
                 self.centerConstraintConstant = abs(newConstant) < maxOffset ? newConstant : (newConstant > 0 ? maxOffset : -maxOffset)
@@ -105,8 +107,7 @@ class SplitterView: UIView {
             self.touchView.topAnchor.constraint(equalTo: self.topAnchor),
             self.touchView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
             self.touchView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            //self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
-            self.touchView.widthAnchor.constraint(equalToConstant: 400),
+            self.touchView.widthAnchor.constraint(equalToConstant: TouchView.thickness),
         ]
 
         var previousOrientation: UIDeviceOrientation?

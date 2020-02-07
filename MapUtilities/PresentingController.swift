@@ -12,20 +12,36 @@ import VerticonsToolbox
 
 class PresentingController: UIViewController {
 
+    private let top = UIView()
     private let map = MKMapView()
+    private let bottom = UIView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         do { // Add the subviews and their constarints
+            top.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(top)
             map.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(map)
-     
+            bottom.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(bottom)
+
             NSLayoutConstraint.activate( [
-                map.topAnchor.constraint(equalTo: view.topAnchor),
-                map.rightAnchor.constraint(equalTo: view.rightAnchor),
-                map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                top.topAnchor.constraint(equalTo: view.topAnchor),
+                top.rightAnchor.constraint(equalTo: view.rightAnchor),
+                top.leftAnchor.constraint(equalTo: view.leftAnchor),
+                top.bottomAnchor.constraint(equalTo: map.topAnchor),
+
                 map.leftAnchor.constraint(equalTo: view.leftAnchor),
+                map.rightAnchor.constraint(equalTo: view.rightAnchor),
+                map.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                map.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3),
+
+                bottom.topAnchor.constraint(equalTo: map.bottomAnchor),
+                bottom.rightAnchor.constraint(equalTo: view.rightAnchor),
+                bottom.leftAnchor.constraint(equalTo: view.leftAnchor),
+                bottom.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             ])
         }
 
@@ -40,7 +56,19 @@ class PresentingController: UIViewController {
 
             let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
                 switch tool.id {
-                case .overviewDetail: self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true)
+                case .overviewDetail:
+                    let child = true
+                    if child  {
+                        let controller = OverviewDetailController(initialOverviewRegion: self.map.region)
+                        self.addChild(controller)
+                        controller.view.frame = self.map.frame
+                        self.view.addSubview(controller.view)
+                        controller.didMove(toParent: self)
+                    }
+                    else {
+                        self.present(OverviewDetailController(initialOverviewRegion: self.map.region), animated: true)
+                    }
+                    
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
                 case .test: self.present(TestController(), animated: true)
                 }
@@ -63,7 +91,8 @@ class PresentingController: UIViewController {
                 let button = tool.control as! UIButton
                 button.setImage(newImage.withRenderingMode(.alwaysOriginal), for: .normal)
             }
-               
+
+
             let overviewDetailButton = UIButton(type: .system)
             let overviewDetailImage = UIImage(#imageLiteral(resourceName: "Magnify.png"))
             overviewDetailButton.setImage(overviewDetailImage.withRenderingMode(.alwaysOriginal), for: .normal)
