@@ -13,16 +13,16 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
-    class OverviewDetailView : UIView {
+    class SplitView : UIView {
 
-        private let overview: UIView
+        private let upper: UIView
         private let splitter = SplitterView()
-        private let detail: UIView
+        private let lower: UIView
         private var currentConstraints: [NSLayoutConstraint]?
 
         init(overview: UIView, detail: UIView) {
-            self.overview = overview
-            self.detail = detail
+            self.upper = overview
+            self.lower = detail
             super.init(frame: .zero)
 
             overview.translatesAutoresizingMaskIntoConstraints = false
@@ -38,52 +38,52 @@ class OverviewDetailController: UIViewController {
         required init?(coder: NSCoder) { fatalError("OverviewDetailView - init(coder:) has not been implemented") }
         
         private lazy var potraitConstraints = [
-           overview.topAnchor.constraint(equalTo: self.topAnchor),
-           overview.rightAnchor.constraint(equalTo: self.rightAnchor),
-           overview.bottomAnchor.constraint(equalTo: splitter.topAnchor),
-           overview.leftAnchor.constraint(equalTo: self.leftAnchor),
+           upper.topAnchor.constraint(equalTo: self.topAnchor),
+           upper.rightAnchor.constraint(equalTo: self.rightAnchor),
+           upper.bottomAnchor.constraint(equalTo: splitter.topAnchor),
+           upper.leftAnchor.constraint(equalTo: self.leftAnchor),
 
            splitter.leftAnchor.constraint(equalTo: self.leftAnchor),
            splitter.rightAnchor.constraint(equalTo: self.rightAnchor),
            splitter.centerYAnchor.constraint(equalTo: self.centerYAnchor),
            splitter.heightAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-           detail.topAnchor.constraint(equalTo: splitter.bottomAnchor),
-           detail.rightAnchor.constraint(equalTo: self.rightAnchor),
-           detail.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           detail.leftAnchor.constraint(equalTo: self.leftAnchor),
+           lower.topAnchor.constraint(equalTo: splitter.bottomAnchor),
+           lower.rightAnchor.constraint(equalTo: self.rightAnchor),
+           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+           lower.leftAnchor.constraint(equalTo: self.leftAnchor),
         ]
         private lazy var landscapeRightConstraints = [
-           overview.topAnchor.constraint(equalTo: self.topAnchor),
-           overview.rightAnchor.constraint(equalTo: self.rightAnchor),
-           overview.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           overview.leftAnchor.constraint(equalTo: splitter.rightAnchor),
+           upper.topAnchor.constraint(equalTo: self.topAnchor),
+           upper.rightAnchor.constraint(equalTo: self.rightAnchor),
+           upper.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+           upper.leftAnchor.constraint(equalTo: splitter.rightAnchor),
 
            splitter.topAnchor.constraint(equalTo: self.topAnchor),
            splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
            splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
            splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-           detail.topAnchor.constraint(equalTo: self.topAnchor),
-           detail.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-           detail.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           detail.leftAnchor.constraint(equalTo: self.leftAnchor),
+           lower.topAnchor.constraint(equalTo: self.topAnchor),
+           lower.rightAnchor.constraint(equalTo: splitter.leftAnchor),
+           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+           lower.leftAnchor.constraint(equalTo: self.leftAnchor),
         ]
         private lazy var landscapeLeftConstraints = [
-           overview.topAnchor.constraint(equalTo: self.topAnchor),
-           overview.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-           overview.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           overview.leftAnchor.constraint(equalTo: self.leftAnchor),
+           upper.topAnchor.constraint(equalTo: self.topAnchor),
+           upper.rightAnchor.constraint(equalTo: splitter.leftAnchor),
+           upper.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+           upper.leftAnchor.constraint(equalTo: self.leftAnchor),
 
            splitter.topAnchor.constraint(equalTo: self.topAnchor),
            splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
            splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
            splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
 
-           detail.topAnchor.constraint(equalTo: self.topAnchor),
-           detail.rightAnchor.constraint(equalTo: self.rightAnchor),
-           detail.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           detail.leftAnchor.constraint(equalTo: splitter.rightAnchor),
+           lower.topAnchor.constraint(equalTo: self.topAnchor),
+           lower.rightAnchor.constraint(equalTo: self.rightAnchor),
+           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+           lower.leftAnchor.constraint(equalTo: splitter.rightAnchor),
         ]
 
         override func layoutSubviews() {
@@ -109,19 +109,17 @@ class OverviewDetailController: UIViewController {
 
     private let dualMapsManager: DualMapsManager
 
-    init(initialOverviewRegion: MKCoordinateRegion) {
-        dualMapsManager = DualMapsManager(initialOverviewRegion: initialOverviewRegion)
+    init(mainMap: MKMapView) {
+        dualMapsManager = DualMapsManager(mainMap: mainMap)
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    deinit { print("OverviewDetailController Deinit") }
-
     override func loadView() {
-        view = OverviewDetailView(overview: dualMapsManager.overviewMap, detail: dualMapsManager.detailMap)
+        view = SplitView(overview: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
     }
 
     override func viewDidLoad() {
@@ -150,11 +148,12 @@ class OverviewDetailController: UIViewController {
         }
 
 
+        // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
         var previousOrientation: UIDeviceOrientation = .unknown
         var notificationObserver: NSObjectProtocol?
         notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
             let newOrientation = UIDevice.current.orientation
-            print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
+            //print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
 
             guard self != nil else  {
                 if let observer = notificationObserver {
@@ -164,7 +163,6 @@ class OverviewDetailController: UIViewController {
                 return
             }
 
-            // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
             if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
             previousOrientation = newOrientation
         }

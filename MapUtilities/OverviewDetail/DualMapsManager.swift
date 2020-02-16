@@ -42,7 +42,7 @@ class DualMapsManager : NSObject {
         }
 
         func updateBounds(_ dualMaps: DualMapsManager) {
-            var newBounds = dualMaps.overviewMap.convert(dualMaps.detailMap.region, toRectTo: dualMaps.overviewMap)
+            var newBounds = dualMaps.mainMap.convert(dualMaps.detailMap.region, toRectTo: dualMaps.mainMap)
             newBounds.size = CGSize(width: max(newBounds.width, 20), height: max(newBounds.height, 20))
             bounds = newBounds
         }
@@ -50,61 +50,54 @@ class DualMapsManager : NSObject {
 
     private static let spanRatio = 10.0
 
-    let overviewMap = MKMapView()
+    let mainMap: MKMapView
+    let mainDelegate: MKMapViewDelegate?
+    
     let detailMap = MKMapView()
 
     private let detailAnnotation = MKPointAnnotation(__coordinate: CLLocationCoordinate2D.zero)
 
     private var observers = [NSKeyValueObservation]()
 
-    init(initialOverviewRegion: MKCoordinateRegion) {
+    init(mainMap: MKMapView) {
+        self.mainMap = mainMap
+        self.mainDelegate = mainMap.delegate
 
         super.init()
 
-        func setup(map: MKMapView) {
+        func setup(_ map: MKMapView) {
             map.delegate = self
-            map.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapGestureHandler(_:))))
-            observers.append(map.observe(\.bounds, options: [.new]) { mapView, change in self.updateAnnotation() })
+            observers.append(map.observe(\.bounds, options: [.new]) { [weak self] mapView, change in self?.updateAnnotation() })
         }
 
-        setup(map: overviewMap)
-        setup(map: detailMap)
+        setup(mainMap)
+        setup(detailMap)
 
-        overviewMap.region = initialOverviewRegion
-        detailMap.region = initialOverviewRegion / DualMapsManager.spanRatio
+        detailMap.region = mainMap.region / DualMapsManager.spanRatio
 
         detailAnnotation.coordinate = detailMap.region.center
-        overviewMap.addAnnotation(detailAnnotation)
+        mainMap.addAnnotation(detailAnnotation)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func updateAnnotation() { // Update the annotation's center and bounds to match the detail view.
-        detailAnnotation.coordinate = detailMap.region.center
-        if let annotationView = overviewMap.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
+    deinit {
+        for observer in observers { observer.invalidate() }
+        mainMap.removeAnnotation(detailAnnotation)
     }
 
-    @objc func tapGestureHandler(_ recognizer: UITapGestureRecognizer) {
-        guard let mapView = recognizer.view as? MKMapView else { return }
-        
-        if mapView == overviewMap { // Center both maps on the tap point
-            let touchPoint = recognizer.location(in: overviewMap)
-            let touchCoordinate = overviewMap.convert(touchPoint, toCoordinateFrom: overviewMap)
-            overviewMap.region.center = touchCoordinate
-            detailMap.region = overviewMap.region / DualMapsManager.spanRatio
-        }
-        else { // Center the Overview map on the Detail map
-            overviewMap.region = DualMapsManager.spanRatio * detailMap.region
-        }
+    private func updateAnnotation() { // Update the annotation's center and bounds to match the detail view.
+        detailAnnotation.coordinate = detailMap.region.center
+        if let annotationView = mainMap.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
     }
 
     @objc func longPressGestureHandler(_ recognizer: UILongPressGestureRecognizer) {
         switch recognizer.state {
         case .changed:
-            guard let annotationView = overviewMap.view(for: detailAnnotation) else { fatalError("Cannot get detail annotation's view") }
-            detailMap.region.center = overviewMap.convert(recognizer.location(in: annotationView), toCoordinateFrom: annotationView)
+            guard let annotationView = mainMap.view(for: detailAnnotation) else { fatalError("Cannot get detail annotation's view") }
+            detailMap.region.center = mainMap.convert(recognizer.location(in: annotationView), toCoordinateFrom: annotationView)
             //print("Detail map repositioned to \(detailMap.region.center)")
         default: break
         }
@@ -112,11 +105,16 @@ class DualMapsManager : NSObject {
 }
 
 extension DualMapsManager : MKMapViewDelegate {
-    
+
+    override func forwardingTarget(for aSelector: Selector!) -> Any? {
+        print("Forwarding target for \(String(describing: aSelector))")
+        return mainDelegate
+    }
+
     func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { updateAnnotation() }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        var annotationView = overviewMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
+        var annotationView = mainMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
         if annotationView == nil {
             annotationView = DetailAnnotationView(annotation: nil)
             annotationView!.isDraggable = true
