@@ -12,6 +12,55 @@ import VerticonsToolbox
 
 class DualMapsManager : NSObject {
 
+    private class DetailMapViewDelegate : NSObject, MKMapViewDelegate {
+
+        weak var manager: DualMapsManager!
+
+        init(manager: DualMapsManager) {
+            self.manager = manager
+        }
+
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { manager.updateAnnotation() }
+    }
+
+    private class MainMapViewDelegate : DetailMapViewDelegate {
+
+        override func forwardingTarget(for selector: Selector!) -> Any? {
+            guard let manager = manager else { return super.forwardingTarget(for: selector) }
+
+            let target: Any? = super.forwardingTarget(for: selector) ?? manager.originalDelegate
+            print("DualMapsManager: Forwarding target for \(String(describing: selector)) = \(type(of: target))")
+            return target
+        }
+
+        override func responds(to selector: Selector!) -> Bool {
+            guard let manager = manager else { return super.responds(to: selector) }
+
+            let result = super.responds(to: selector) || manager.originalDelegate?.responds(to: selector) ?? false
+            print("DualMapsManager: Responds to \(String(describing: selector))? \(result ? "Yes" : "No")")
+            return result
+        }
+
+        override func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            super.mapViewDidChangeVisibleRegion(mapView)
+            manager.originalDelegate?.mapViewDidChangeVisibleRegion?(mapView)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard annotation is DetailAnnotation else {
+                return manager.originalDelegate?.mapView?(mapView, viewFor: annotation)
+            }
+
+            var annotationView = manager.mainMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
+            if annotationView == nil { annotationView = manager.makeAnnotationView() }
+            annotationView!.updateBounds(manager)
+            return annotationView
+        }
+    }
+
+    private class DetailAnnotation : MKPointAnnotation {
+    }
+
     private class DetailAnnotationView : MKAnnotationView {
         static let reuseIdentifier = "Detail"
 
@@ -49,29 +98,31 @@ class DualMapsManager : NSObject {
     }
 
     private static let spanRatio = 10.0
-
-    let mainMap: MKMapView
-    let mainDelegate: MKMapViewDelegate?
     
-    let detailMap = MKMapView()
+    let mainMap: MKMapView
+    private var mainMapDelegate: MKMapViewDelegate?
+    private var originalDelegate: MKMapViewDelegate?
 
-    private let detailAnnotation = MKPointAnnotation(__coordinate: CLLocationCoordinate2D.zero)
+    let detailMap = MKMapView()
+    private var detailMapDelegate: MKMapViewDelegate?
+
+    private let detailAnnotation = DetailAnnotation(__coordinate: CLLocationCoordinate2D.zero)
 
     private var observers = [NSKeyValueObservation]()
 
     init(mainMap: MKMapView) {
         self.mainMap = mainMap
-        self.mainDelegate = mainMap.delegate
 
         super.init()
 
-        func setup(_ map: MKMapView) {
-            map.delegate = self
-            observers.append(map.observe(\.bounds, options: [.new]) { [weak self] mapView, change in self?.updateAnnotation() })
-        }
+        originalDelegate = mainMap.delegate
+        mainMapDelegate = MainMapViewDelegate(manager: self)
+        mainMap.delegate = mainMapDelegate
+        observers.append(mainMap.observe(\.bounds, options: [.new]) { [weak self] mapView, change in self?.updateAnnotation() })
 
-        setup(mainMap)
-        setup(detailMap)
+        detailMapDelegate = DetailMapViewDelegate(manager: self)
+        detailMap.delegate = detailMapDelegate
+        observers.append(mainMap.observe(\.bounds, options: [.new]) { [weak self] mapView, change in self?.updateAnnotation() })
 
         detailMap.region = mainMap.region / DualMapsManager.spanRatio
 
@@ -86,6 +137,17 @@ class DualMapsManager : NSObject {
     deinit {
         for observer in observers { observer.invalidate() }
         mainMap.removeAnnotation(detailAnnotation)
+        mainMap.delegate = originalDelegate
+    }
+
+    private func makeAnnotationView() -> DetailAnnotationView {
+        let annotationView = DetailAnnotationView(annotation: nil)
+        annotationView.isDraggable = true
+        let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGestureHandler))
+        recognizer.allowableMovement = CGFloat.infinity
+        recognizer.delegate = self
+        annotationView.addGestureRecognizer(recognizer)
+        return annotationView
     }
 
     private func updateAnnotation() { // Update the annotation's center and bounds to match the detail view.
@@ -104,33 +166,10 @@ class DualMapsManager : NSObject {
     }
 }
 
-extension DualMapsManager : MKMapViewDelegate {
-
-    override func forwardingTarget(for aSelector: Selector!) -> Any? {
-        print("Forwarding target for \(String(describing: aSelector))")
-        return mainDelegate
-    }
-
-    func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { updateAnnotation() }
-
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        var annotationView = mainMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
-        if annotationView == nil {
-            annotationView = DetailAnnotationView(annotation: nil)
-            annotationView!.isDraggable = true
-            let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGestureHandler))
-            recognizer.allowableMovement = CGFloat.infinity
-            recognizer.delegate = self
-            annotationView!.addGestureRecognizer(recognizer)
-        }
-        annotationView!.updateBounds(self)
-        return annotationView
-    }
-}
-
 extension DualMapsManager : UIGestureRecognizerDelegate {
-
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return gestureRecognizer is UILongPressGestureRecognizer && gestureRecognizer.delegate === self && otherGestureRecognizer is UILongPressGestureRecognizer
+        let result = gestureRecognizer is UILongPressGestureRecognizer && gestureRecognizer.delegate === self && otherGestureRecognizer is UILongPressGestureRecognizer
+        print("shouldRecognizeSimultaneouslyWith = \(result)")
+        return result
     }
 }

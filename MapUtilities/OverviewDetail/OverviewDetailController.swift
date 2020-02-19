@@ -125,28 +125,27 @@ class OverviewDetailController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        do { // Add the toolBar last so that it is on top.
-            enum ToolIdentifier {
-                case dismiss
-            }
-
-            let toolBar = ToolBar<ToolIdentifier>(parent: view)
-
-            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
-                switch tool.id {
-                case .dismiss: self?.dismiss(animated: true, completion: nil)
-                }
-            }
-
-            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
-                switch tool.id {
-                case .dismiss: tool.control.setNeedsDisplay()
-                }
-            }
-            
-            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+        do {
+//            enum ToolIdentifier {
+//                case dismiss
+//            }
+//
+//            let toolBar = ToolBar<ToolIdentifier>(parent: view)
+//
+//            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
+//                switch tool.id {
+//                case .dismiss: self?.dismiss(animated: true, completion: nil)
+//                }
+//            }
+//
+//            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+//                switch tool.id {
+//                case .dismiss: tool.control.setNeedsDisplay()
+//                }
+//            }
+//
+//            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
-
 
         // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
         var previousOrientation: UIDeviceOrientation = .unknown

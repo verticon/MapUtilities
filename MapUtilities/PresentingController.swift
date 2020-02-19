@@ -47,6 +47,8 @@ class PresentingController: UIViewController {
             ])
         }
 
+        map.delegate = self
+
         map.translatesAutoresizingMaskIntoConstraints = false
         middle.addSubview(map)
         let mapConstraints = [
@@ -158,4 +160,15 @@ class PresentingController: UIViewController {
         default: break
         }
     }
+}
+
+extension PresentingController : MKMapViewDelegate {
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        print("PresentingController: MapView Region Did Change Animated")
+    }
+
+    func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+        print("PresentingController: MapView Did Change Visible Region")
+    }
+
 }
