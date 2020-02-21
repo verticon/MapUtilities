@@ -88,7 +88,7 @@ class OverviewDetailController: UIViewController {
 
         override func layoutSubviews() {
             let orientation = getOrientation()
-            print("OverviewDetailView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
+            //print("OverviewDetailView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
 
             if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
 
@@ -103,13 +103,11 @@ class OverviewDetailController: UIViewController {
         }
     }
 
-    private enum ToolIdentifier : Int, CaseIterable {
-        case dismiss
-    }
-
     private let dualMapsManager: DualMapsManager
+    private let mainMapInitialConstraints: [NSLayoutConstraint]
 
     init(mainMap: MKMapView) {
+        mainMapInitialConstraints = mainMap.constraints
         dualMapsManager = DualMapsManager(mainMap: mainMap)
         super.init(nibName: nil, bundle: nil)
     }
@@ -124,28 +122,6 @@ class OverviewDetailController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        do {
-//            enum ToolIdentifier {
-//                case dismiss
-//            }
-//
-//            let toolBar = ToolBar<ToolIdentifier>(parent: view)
-//
-//            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
-//                switch tool.id {
-//                case .dismiss: self?.dismiss(animated: true, completion: nil)
-//                }
-//            }
-//
-//            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
-//                switch tool.id {
-//                case .dismiss: tool.control.setNeedsDisplay()
-//                }
-//            }
-//
-//            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
-        }
 
         // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
         var previousOrientation: UIDeviceOrientation = .unknown

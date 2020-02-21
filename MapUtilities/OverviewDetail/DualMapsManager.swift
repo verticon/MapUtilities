@@ -29,7 +29,7 @@ class DualMapsManager : NSObject {
             guard let manager = manager else { return super.forwardingTarget(for: selector) }
 
             let target: Any? = super.forwardingTarget(for: selector) ?? manager.originalDelegate
-            print("DualMapsManager: Forwarding target for \(String(describing: selector)) = \(type(of: target))")
+            //print("DualMapsManager: Forwarding target for \(String(describing: selector)) = \(type(of: target))")
             return target
         }
 
@@ -37,7 +37,7 @@ class DualMapsManager : NSObject {
             guard let manager = manager else { return super.responds(to: selector) }
 
             let result = super.responds(to: selector) || manager.originalDelegate?.responds(to: selector) ?? false
-            print("DualMapsManager: Responds to \(String(describing: selector))? \(result ? "Yes" : "No")")
+            //print("DualMapsManager: Responds to \(String(describing: selector))? \(result ? "Yes" : "No")")
             return result
         }
 
@@ -51,9 +51,8 @@ class DualMapsManager : NSObject {
                 return manager.originalDelegate?.mapView?(mapView, viewFor: annotation)
             }
 
-            var annotationView = manager.mainMap.dequeueReusableAnnotationView(withIdentifier: DetailAnnotationView.reuseIdentifier) as? DetailAnnotationView
-            if annotationView == nil { annotationView = manager.makeAnnotationView() }
-            annotationView!.updateBounds(manager)
+            let annotationView = manager.makeAnnotationView()
+            annotationView.updateBounds(manager)
             return annotationView
         }
     }
@@ -62,7 +61,6 @@ class DualMapsManager : NSObject {
     }
 
     private class DetailAnnotationView : MKAnnotationView {
-        static let reuseIdentifier = "Detail"
 
         private func setColors() {
             if self.traitCollection.userInterfaceStyle == .light {
@@ -76,7 +74,7 @@ class DualMapsManager : NSObject {
         }
 
         init(annotation: MKAnnotation?) {
-            super.init(annotation: annotation, reuseIdentifier: DetailAnnotationView.reuseIdentifier)
+            super.init(annotation: annotation, reuseIdentifier: nil)
             alpha = 0.2
             layer.borderWidth = 1
             setColors()
@@ -169,7 +167,7 @@ class DualMapsManager : NSObject {
 extension DualMapsManager : UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         let result = gestureRecognizer is UILongPressGestureRecognizer && gestureRecognizer.delegate === self && otherGestureRecognizer is UILongPressGestureRecognizer
-        print("shouldRecognizeSimultaneouslyWith = \(result)")
+        //print("shouldRecognizeSimultaneouslyWith = \(result)")
         return result
     }
 }

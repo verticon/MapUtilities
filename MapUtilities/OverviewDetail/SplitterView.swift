@@ -54,6 +54,20 @@ class SplitterView: UIView {
     // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
     // ****************************************************************************************************************
 
+    var splitterPosition : CGFloat { // -1.0 -> 1.0
+        get { centerConstraintConstant / maxOffset }
+        set {
+            var value = newValue
+            if value < -1.0 { value = -1.0 }
+            else if value > 1.0 { value = 1.0 }
+
+            centerConstraintConstant = value * maxOffset
+            getCenterConstraint().constant = centerConstraintConstant
+        }
+    }
+
+    private var maxOffset : CGFloat { (superview!.bounds.height > superview!.bounds.width  ? superview!.bounds.height : superview!.bounds.width) / 2 }
+
     private lazy var handler: (UIPanGestureRecognizer) -> Void = {
 
         var initialConstant: CGFloat!
@@ -64,19 +78,15 @@ class SplitterView: UIView {
             case .began:
                 initialConstant = self.centerConstraintConstant
 
-            case .changed:
-                let centerConstraint = self.getCenterConstraint()
+            case .changed: // The recognizer reports the current, total delta since the beginning of the pan gesture
 
-                // The recognizer reports the current, total delta since the beginning of the pan gesture
                 let panGestureDelta = recognizer.translation(in: self.superview)
-                let newConstant = initialConstant + (centerConstraint.firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
 
-                // Whether in potrait or in landscape we are operating off of the maximum dimension.
-                let maxDimension = self.superview!.bounds.height > self.superview!.bounds.width  ? self.superview!.bounds.height : self.superview!.bounds.width
-                let maxOffset = maxDimension/2 - 2*TouchView.thickness
+                let limit = self.maxOffset - 2*TouchView.thickness
+                var newConstant = initialConstant + (self.getCenterConstraint().firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
+                newConstant = abs(newConstant) < limit ? newConstant : (newConstant > 0 ? limit : -limit)
 
-                self.centerConstraintConstant = abs(newConstant) < maxOffset ? newConstant : (newConstant > 0 ? maxOffset : -maxOffset)
-                centerConstraint.constant = self.centerConstraintConstant
+                self.splitterPosition = newConstant / self.maxOffset
 
             default: break
             }
@@ -152,7 +162,7 @@ class SplitterView: UIView {
             }
 
             let orientation = getOrientation()
-            print("SplitterView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
+            //print("SplitterView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
 
             updateConstraints(orientation)
             updateSign(orientation)
@@ -197,7 +207,7 @@ private class TouchView : UIView {
  
     // Add up and down, or left and right, pointing triangles to the splitter.
     override func draw(_ rect: CGRect) {
-        print("TouchView - Draw()")
+        //print("TouchView - Draw()")
 
         guard let context = UIGraphicsGetCurrentContext() else { return }
         context.setFillColor(UIColor.black.cgColor)

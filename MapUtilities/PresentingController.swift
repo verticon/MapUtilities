@@ -12,53 +12,23 @@ import VerticonsToolbox
 
 class PresentingController: UIViewController {
 
-    private let top = UIView()
-    private let middle = UIView()
-    private let bottom = UIView()
     private let map = MKMapView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        do { // Add the subviews and their constarints
-            top.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(top)
-            middle.translatesAutoresizingMaskIntoConstraints = false
-            middle.backgroundColor = .white
-            view.addSubview(middle)
-            bottom.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(bottom)
-
-            NSLayoutConstraint.activate( [
-                top.topAnchor.constraint(equalTo: view.topAnchor),
-                top.rightAnchor.constraint(equalTo: view.rightAnchor),
-                top.leftAnchor.constraint(equalTo: view.leftAnchor),
-                top.bottomAnchor.constraint(equalTo: middle.topAnchor),
-
-                middle.leftAnchor.constraint(equalTo: view.leftAnchor),
-                middle.rightAnchor.constraint(equalTo: view.rightAnchor),
-                middle.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                middle.heightAnchor.constraint(equalToConstant: 0.9 * UIScreen.main.bounds.height),
-
-                bottom.topAnchor.constraint(equalTo: middle.bottomAnchor),
-                bottom.rightAnchor.constraint(equalTo: view.rightAnchor),
-                bottom.leftAnchor.constraint(equalTo: view.leftAnchor),
-                bottom.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            ])
-        }
-
         map.delegate = self
 
         map.translatesAutoresizingMaskIntoConstraints = false
-        middle.addSubview(map)
+        view.addSubview(map)
         let mapConstraints = [
-            map.topAnchor.constraint(equalTo: middle.topAnchor),
-            map.rightAnchor.constraint(equalTo: middle.rightAnchor),
-            map.leftAnchor.constraint(equalTo: middle.leftAnchor),
-            map.bottomAnchor.constraint(equalTo: middle.bottomAnchor),
+            map.topAnchor.constraint(equalTo: view.topAnchor),
+            map.rightAnchor.constraint(equalTo: view.rightAnchor),
+            map.leftAnchor.constraint(equalTo: view.leftAnchor),
+            map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ]
         NSLayoutConstraint.activate(mapConstraints)
-
+        
         do { // Add the toolBar last so that it is on top.
 
             enum ToolIdentifier {
@@ -79,10 +49,16 @@ class PresentingController: UIViewController {
                         self.map.removeFromSuperview()
                         overviewDetalController = OverviewDetailController(mainMap: self.map)
                         self.addChild(overviewDetalController)
-                        overviewDetalController.view.frame = self.middle.frame
                         self.view.addSubview(overviewDetalController.view)
-                        self.view.bringSubviewToFront(toolBar)
                         overviewDetalController.didMove(toParent: self)
+
+                        overviewDetalController.view.translatesAutoresizingMaskIntoConstraints = false
+                        NSLayoutConstraint.activate([
+                            overviewDetalController.view.topAnchor.constraint(equalTo: self.view.topAnchor),
+                            overviewDetalController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+                            overviewDetalController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+                            overviewDetalController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
+                        ])
                     }
                     else {
                         self.map.removeFromSuperview()
@@ -90,10 +66,12 @@ class PresentingController: UIViewController {
                         overviewDetalController.view.removeFromSuperview()
                         overviewDetalController.removeFromParent()
                         overviewDetalController = nil
-                        self.middle.addSubview(self.map)
+                        self.view.addSubview(self.map)
                         NSLayoutConstraint.activate(mapConstraints)
                     }
-                    
+
+                    self.view.bringSubviewToFront(toolBar)
+
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
                 case .test: self.present(TestController(), animated: true)
                 }
@@ -163,12 +141,4 @@ class PresentingController: UIViewController {
 }
 
 extension PresentingController : MKMapViewDelegate {
-    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        print("PresentingController: MapView Region Did Change Animated")
-    }
-
-    func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
-        print("PresentingController: MapView Did Change Visible Region")
-    }
-
 }
