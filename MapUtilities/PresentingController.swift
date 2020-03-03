@@ -43,6 +43,7 @@ class PresentingController: UIViewController {
             let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
                 switch tool.id {
                 case .overviewDetail:
+
                     guard let button = tool.control as? UIButton else { fatalError("OverviewDetail tool is not a button???") }
                     button.isSelected = !button.isSelected
                     if button.isSelected  {
@@ -73,6 +74,7 @@ class PresentingController: UIViewController {
                     self.view.bringSubviewToFront(toolBar)
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
+
                 case .test: self.present(TestController(), animated: true)
                 }
             }

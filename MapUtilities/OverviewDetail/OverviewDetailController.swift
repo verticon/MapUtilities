@@ -109,13 +109,14 @@ class OverviewDetailController: UIViewController {
     init(mainMap: MKMapView) {
         mainMapInitialConstraints = mainMap.constraints
         dualMapsManager = DualMapsManager(mainMap: mainMap)
+
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     override func loadView() {
         view = SplitView(overview: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
     }
