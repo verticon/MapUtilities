@@ -20,7 +20,9 @@ class DualMapsManager : NSObject {
             self.manager = manager
         }
 
-        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { manager.updateAnnotation() }
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            manager.updateAnnotation()
+        }
     }
 
     private class MainMapViewDelegate : DetailMapViewDelegate {
@@ -88,15 +90,16 @@ class DualMapsManager : NSObject {
             if self.traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle { setColors() }
         }
 
-        func updateBounds(_ dualMaps: DualMapsManager) {
-            var newBounds = dualMaps.mainMap.convert(dualMaps.detailMap.region, toRectTo: dualMaps.mainMap)
-            newBounds.size = CGSize(width: max(newBounds.width, 20), height: max(newBounds.height, 20))
+        func updateBounds(_ manager: DualMapsManager) {
+            let minDimension: CGFloat = 20
+            var newBounds = manager.mainMap.convert(manager.detailMap.region, toRectTo: manager.mainMap)
+            newBounds.size = CGSize(width: max(newBounds.width, minDimension), height: max(newBounds.height, minDimension))
             bounds = newBounds
         }
     }
 
     private static let spanRatio = 10.0
-    
+
     let mainMap: MKMapView
     private var mainMapDelegate: MKMapViewDelegate?
     private var originalDelegate: MKMapViewDelegate?
@@ -121,13 +124,13 @@ class DualMapsManager : NSObject {
         detailMapDelegate = DetailMapViewDelegate(manager: self)
         detailMap.delegate = detailMapDelegate
         observers.append(mainMap.observe(\.bounds, options: [.new]) { [weak self] mapView, change in self?.updateAnnotation() })
-
-        detailMap.region = mainMap.region / DualMapsManager.spanRatio
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapGestureHandler))
+        detailMap.addGestureRecognizer(recognizer)
+        detailMap.region = mainMap.region
 
         detailAnnotation.coordinate = detailMap.region.center
-        mainMap.addAnnotation(detailAnnotation)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -136,6 +139,12 @@ class DualMapsManager : NSObject {
         for observer in observers { observer.invalidate() }
         mainMap.removeAnnotation(detailAnnotation)
         mainMap.delegate = originalDelegate
+    }
+
+    func initialPesentationCompleted() {
+        let newDetailRegion = mainMap.region / DualMapsManager.spanRatio
+        detailMap.setRegion(newDetailRegion, animated: true)
+        mainMap.addAnnotation(detailAnnotation)
     }
 
     private func makeAnnotationView() -> DetailAnnotationView {
@@ -151,6 +160,17 @@ class DualMapsManager : NSObject {
     private func updateAnnotation() { // Update the annotation's center and bounds to match the detail view.
         detailAnnotation.coordinate = detailMap.region.center
         if let annotationView = mainMap.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
+    }
+
+    @objc func tapGestureHandler(_ recognizer: UITapGestureRecognizer) {
+        switch recognizer.state {
+        case .ended:
+            print("\nMain Region   - Center: \(mainMap.region.center)  Span: \(mainMap.region.span.latitudeDelta), \(mainMap.region.span.longitudeDelta)")
+            print("Detail Region - Center: \(detailMap.region.center)  Span: \(detailMap.region.span.latitudeDelta), \(detailMap.region.span.longitudeDelta)")
+            //detailMap.setRegion(mainMap.region / DualMapsManager.spanRatio, animated: true)
+            //detailMap.region = mainMap.region
+        default: break
+        }
     }
 
     @objc func longPressGestureHandler(_ recognizer: UILongPressGestureRecognizer) {

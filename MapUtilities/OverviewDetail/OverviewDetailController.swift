@@ -16,7 +16,7 @@ class OverviewDetailController: UIViewController {
     class SplitView : UIView {
 
         private let upper: UIView
-        private let splitter = SplitterView()
+        let splitter = Splitter()
         private let lower: UIView
         private var currentConstraints: [NSLayoutConstraint]?
 
@@ -46,7 +46,7 @@ class OverviewDetailController: UIViewController {
            splitter.leftAnchor.constraint(equalTo: self.leftAnchor),
            splitter.rightAnchor.constraint(equalTo: self.rightAnchor),
            splitter.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-           splitter.heightAnchor.constraint(equalToConstant: SplitterView.thickness),
+           splitter.heightAnchor.constraint(equalToConstant: Splitter.thickness),
 
            lower.topAnchor.constraint(equalTo: splitter.bottomAnchor),
            lower.rightAnchor.constraint(equalTo: self.rightAnchor),
@@ -62,7 +62,7 @@ class OverviewDetailController: UIViewController {
            splitter.topAnchor.constraint(equalTo: self.topAnchor),
            splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
            splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-           splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
+           splitter.widthAnchor.constraint(equalToConstant: Splitter.thickness),
 
            lower.topAnchor.constraint(equalTo: self.topAnchor),
            lower.rightAnchor.constraint(equalTo: splitter.leftAnchor),
@@ -78,7 +78,7 @@ class OverviewDetailController: UIViewController {
            splitter.topAnchor.constraint(equalTo: self.topAnchor),
            splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
            splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-           splitter.widthAnchor.constraint(equalToConstant: SplitterView.thickness),
+           splitter.widthAnchor.constraint(equalToConstant: Splitter.thickness),
 
            lower.topAnchor.constraint(equalTo: self.topAnchor),
            lower.rightAnchor.constraint(equalTo: self.rightAnchor),
@@ -87,19 +87,39 @@ class OverviewDetailController: UIViewController {
         ]
 
         override func layoutSubviews() {
-            let orientation = getOrientation()
-            //print("OverviewDetailView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
-
-            if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
-
-            switch orientation {
-            case .portrait: currentConstraints = potraitConstraints
-            case .landscapeRight: currentConstraints = landscapeRightConstraints
-            case .landscapeLeft: currentConstraints = landscapeLeftConstraints
-            default: fatalError("This shouldn't happen")
+    
+            func selectConstraints() -> [NSLayoutConstraint] {
+                switch getOrientation() {
+                case .portrait: return potraitConstraints
+                case .landscapeRight: return landscapeRightConstraints
+                case .landscapeLeft: return landscapeLeftConstraints
+                default: fatalError("This shouldn't happen")
+                }
             }
 
+            if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
+            currentConstraints = selectConstraints()
+            updateSplitterPosition()
             NSLayoutConstraint.activate(currentConstraints!)
+        }
+
+
+        // The magnitude of the splitter's offset remains the same in portrait or in landscape; the splitter is always
+        // moving through the device's longer dimension (y in portrait, x in landscape). The sign (+/-) might, however,
+        // change when the orientation changes.
+
+        func updateSplitterPosition() {
+            func getSplitterCenterConstraint() -> NSLayoutConstraint {
+                for constraint in  currentConstraints! {
+                    if constraint.firstItem === splitter && (constraint.firstAttribute == .centerY || constraint.firstAttribute == .centerX) {
+                        return constraint
+                    }
+                }
+
+                fatalError("No center constraint???")
+            }
+
+            getSplitterCenterConstraint().constant = splitter.offset
         }
     }
 
@@ -118,7 +138,9 @@ class OverviewDetailController: UIViewController {
     }
     
     override func loadView() {
-        view = SplitView(overview: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
+        let splitView = SplitView(overview: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
+        splitView.splitter.percentOffset = 1
+        view = splitView
     }
 
     override func viewDidLoad() {
@@ -142,5 +164,20 @@ class OverviewDetailController: UIViewController {
             if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
             previousOrientation = newOrientation
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animateSplitter(to: 0)
+    }
+
+    func animateSplitter(to percentOffset: CGFloat) {
+        guard  let splitView = view as? SplitView else { return }
+
+        splitView.splitter.percentOffset = percentOffset
+        splitView.updateSplitterPosition()
+        UIView.animate(withDuration: 2,
+            animations: { splitView.layoutIfNeeded() },
+            completion: { _ in self.dualMapsManager.initialPesentationCompleted() })
     }
 }

@@ -18,7 +18,7 @@
 		E1A831F4237AF2EA00DAE8CE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1A831F2237AF2EA00DAE8CE /* LaunchScreen.storyboard */; };
 		E1D515CA23DA1B4400DA0645 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D515C923DA1B4400DA0645 /* Utilities.swift */; };
 		E1F7A9B22389C6EB0083E73D /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F7A9B12389C6EB0083E73D /* Extensions.swift */; };
-		E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A338237B11C600977F7C /* SplitterView.swift */; };
+		E1F8A33B237B11C600977F7C /* Splitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A338237B11C600977F7C /* Splitter.swift */; };
 		E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A339237B11C600977F7C /* ToolBar.swift */; };
 		E1F8A33D237B11C600977F7C /* DualMapsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F8A33A237B11C600977F7C /* DualMapsManager.swift */; };
 		E1F8A340237B136000977F7C /* VerticonsToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */; };
@@ -53,7 +53,7 @@
 		E1A831F5237AF2EA00DAE8CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1D515C923DA1B4400DA0645 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		E1F7A9B12389C6EB0083E73D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		E1F8A338237B11C600977F7C /* SplitterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplitterView.swift; sourceTree = "<group>"; };
+		E1F8A338237B11C600977F7C /* Splitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Splitter.swift; sourceTree = "<group>"; };
 		E1F8A339237B11C600977F7C /* ToolBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolBar.swift; sourceTree = "<group>"; };
 		E1F8A33A237B11C600977F7C /* DualMapsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DualMapsManager.swift; sourceTree = "<group>"; };
 		E1F8A33F237B136000977F7C /* VerticonsToolbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = VerticonsToolbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -91,7 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				E1F8A33A237B11C600977F7C /* DualMapsManager.swift */,
-				E1F8A338237B11C600977F7C /* SplitterView.swift */,
+				E1F8A338237B11C600977F7C /* Splitter.swift */,
 				E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */,
 			);
 			path = OverviewDetail;
@@ -224,7 +224,7 @@
 				E14F1C77237C212600FF3E03 /* PresentingController.swift in Sources */,
 				E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
-				E1F8A33B237B11C600977F7C /* SplitterView.swift in Sources */,
+				E1F8A33B237B11C600977F7C /* Splitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -14,14 +14,9 @@ import VerticonsToolbox
 // to the new orientation at the time of the orientation change notification. The main screen,
 // however, will have been rotated prior to the notification.
 
-class SplitterView: UIView {
+class Splitter: UIView {
 
     static let thickness: CGFloat = 2 // Height in potrait or width in landscape
-
-    // The magnitude of the offset remains the same in portrait of in landscape; the splitter is always
-    // moving through the longer dimension (y in portrait, x in landscape). The sign (+/-) might, however,
-    // change when the orientation changes.
-    private var centerConstraintConstant: CGFloat = 0
 
     private let touchView = TouchView()
 
@@ -54,39 +49,45 @@ class SplitterView: UIView {
     // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
     // ****************************************************************************************************************
 
-    var splitterPosition : CGFloat { // -1.0 -> 1.0
-        get { centerConstraintConstant / maxOffset }
-        set {
-            var value = newValue
-            if value < -1.0 { value = -1.0 }
-            else if value > 1.0 { value = 1.0 }
+    private var isVertical : Bool { superview!.bounds.height > superview!.bounds.width }
+    private var maxDimension : CGFloat { isVertical ? superview!.bounds.height : superview!.bounds.width }
+    private var maxOffset : CGFloat { maxDimension / 2 - 20 }
 
-            centerConstraintConstant = value * maxOffset
-            getCenterConstraint().constant = centerConstraintConstant
+    private var _percentOffset : CGFloat = 0
+    var percentOffset : CGFloat { // -1.0 -> 1.0
+        get{ return _percentOffset }
+        set {
+            _percentOffset = newValue
+            if _percentOffset < -1.0 { _percentOffset = -1.0 }
+            else if _percentOffset > 1.0 { _percentOffset = 1.0 }
         }
     }
 
-    private var maxOffset : CGFloat { (superview!.bounds.height > superview!.bounds.width  ? superview!.bounds.height : superview!.bounds.width) / 2 }
+    private(set) var offset : CGFloat {
+        get { return percentOffset * maxOffset }
+        set { percentOffset = newValue / maxOffset }
+    }
 
     private lazy var handler: (UIPanGestureRecognizer) -> Void = {
 
-        var initialConstant: CGFloat!
+        var initialOffset: CGFloat!
 
         return { recognizer in
             
             switch recognizer.state {
             case .began:
-                initialConstant = self.centerConstraintConstant
+                initialOffset = self.offset
 
             case .changed: // The recognizer reports the current, total delta since the beginning of the pan gesture
 
                 let panGestureDelta = recognizer.translation(in: self.superview)
 
-                let limit = self.maxOffset - 2*TouchView.thickness
-                var newConstant = initialConstant + (self.getCenterConstraint().firstAttribute == .centerY ? panGestureDelta.y : panGestureDelta.x)
-                newConstant = abs(newConstant) < limit ? newConstant : (newConstant > 0 ? limit : -limit)
+                let limit = self.maxOffset - 2*TouchView.thickness // Don't drag too close to the edge
+                var newOffset = initialOffset + (self.isVertical ? panGestureDelta.y : panGestureDelta.x)
+                if abs(newOffset) > limit { newOffset = newOffset >= 0 ? limit : -limit }
 
-                self.splitterPosition = newConstant / self.maxOffset
+                self.offset = newOffset
+                self.superview?.setNeedsLayout()
 
             default: break
             }
@@ -105,7 +106,6 @@ class SplitterView: UIView {
         // is adding views to the root view. We do it here. It only happens once. It feels kludgey. Sigh ...
         self.superview?.bringSubviewToFront(self.touchView)
 
-
         var currentConstraints: [NSLayoutConstraint]! // Remember so that they can be deactiveated when needed
         var potraitConstraints: [NSLayoutConstraint] = [
             self.touchView.leftAnchor.constraint(equalTo: self.leftAnchor),
@@ -121,6 +121,7 @@ class SplitterView: UIView {
         ]
 
         var previousOrientation: UIDeviceOrientation?
+
         return {
             // Determine whether, in the new orientation, the constaint's offset from the center is positive or negative.
             // Example: If the old orientation was potrait and the splitter had been moved toward the top then the
@@ -128,7 +129,7 @@ class SplitterView: UIView {
             // the same relative position in a landscape right orientation would require the splitter to be moved
             // to the right using a positive value for the constraint's constant (i.e. in the +x direction).
             func updateSign(_ orientation: UIDeviceOrientation) {
-                let wasNegative = self.centerConstraintConstant < 0
+                let wasNegative = self.offset < 0
                 var isNegative = wasNegative
 
                 switch previousOrientation {
@@ -139,9 +140,10 @@ class SplitterView: UIView {
 
                 default: break
                 }
-                self.centerConstraintConstant = (isNegative ? -1 : 1) * abs(self.centerConstraintConstant)
 
-                self.getCenterConstraint().constant = self.centerConstraintConstant
+                self.offset  = (isNegative ? -1 : 1) * abs(self.offset)
+
+                self.superview!.setNeedsLayout()
             }
 
             func updateConstraints(_ orientation: UIDeviceOrientation) {
@@ -172,19 +174,6 @@ class SplitterView: UIView {
         }
     }()
     override func layoutSubviews() { layout() }
-
-    // ****************************************************************************************************************
-    // Utilities
-    // ****************************************************************************************************************
-
-    private func getCenterConstraint() -> NSLayoutConstraint {
-        for constraint in superview!.constraints {
-            if constraint.firstItem! === self && (constraint.firstAttribute == .centerY || constraint.firstAttribute == .centerX) {
-                return constraint
-            }
-        }
-        fatalError("No center constraint???")
-    }
 }
 
 // We want the splitter view to be thin. This makes it difficult to touch.
@@ -214,7 +203,7 @@ private class TouchView : UIView {
 
         let side: CGFloat = 5
         let separation: CGFloat = 1
-        let apex = SplitterView.thickness/2 + separation + side
+        let apex = Splitter.thickness/2 + separation + side
 
         if getOrientation() == .portrait {
             let startX = self.bounds.midX
