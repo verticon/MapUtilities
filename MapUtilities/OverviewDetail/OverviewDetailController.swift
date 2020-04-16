@@ -15,9 +15,9 @@ class OverviewDetailController: UIViewController {
 
     class SplitView : UIView {
 
-        private let upper: UIView
+        let upper: UIView
         let splitter = Splitter()
-        private let lower: UIView
+        let lower: UIView
         private var currentConstraints: [NSLayoutConstraint]?
 
         init(overview: UIView, detail: UIView) {
@@ -88,18 +88,17 @@ class OverviewDetailController: UIViewController {
 
         override func layoutSubviews() {
     
-            func selectConstraints() -> [NSLayoutConstraint] {
-                switch getOrientation() {
-                case .portrait: return potraitConstraints
-                case .landscapeRight: return landscapeRightConstraints
-                case .landscapeLeft: return landscapeLeftConstraints
-                default: fatalError("This shouldn't happen")
-                }
+            if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
+
+            switch getOrientation() {
+            case .portrait: currentConstraints =  potraitConstraints
+            case .landscapeRight: currentConstraints =  landscapeRightConstraints
+            case .landscapeLeft: currentConstraints =  landscapeLeftConstraints
+            default: fatalError("This shouldn't happen")
             }
 
-            if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
-            currentConstraints = selectConstraints()
             updateSplitterPosition()
+
             NSLayoutConstraint.activate(currentConstraints!)
         }
 
@@ -115,7 +114,6 @@ class OverviewDetailController: UIViewController {
                         return constraint
                     }
                 }
-
                 fatalError("No center constraint???")
             }
 
@@ -168,16 +166,31 @@ class OverviewDetailController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        animateSplitter(to: 0)
+        animateSplitter(to: 0, completion: { self.dualMapsManager.zoomDetailMap() })
     }
 
-    func animateSplitter(to percentOffset: CGFloat) {
+    func dismiss(completion: @escaping () -> ()) {
+        animateSplitter(to: 0.5, completion: {
+            self.dualMapsManager.removeAnnotation(completion: completion)
+        })
+    }
+
+    func animateSplitter(to percentOffset: CGFloat, completion: @escaping () -> ()) {
         guard  let splitView = view as? SplitView else { return }
+
+        let frameObserver = splitView.upper.observe(\.bounds, options: [.new]) { [weak self] view, change in
+            print("\nFrame Observer")
+            //self?.syncAnnotationWithDetailMap()
+        }
+
 
         splitView.splitter.percentOffset = percentOffset
         splitView.updateSplitterPosition()
-        UIView.animate(withDuration: 2,
+        UIView.animate(withDuration: 1,
             animations: { splitView.layoutIfNeeded() },
-            completion: { _ in self.dualMapsManager.initialPesentationCompleted() })
+            completion: { _ in
+                frameObserver.invalidate()
+                completion()
+        })
     }
 }

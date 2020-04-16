@@ -60,22 +60,29 @@ class PresentingController: UIViewController {
                             overviewDetalController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor),
                             overviewDetalController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
                         ])
+
+                        self.view.bringSubviewToFront(toolBar)
                     }
                     else {
-                        self.map.removeFromSuperview()
-                        overviewDetalController.willMove(toParent: nil)
-                        overviewDetalController.view.removeFromSuperview()
-                        overviewDetalController.removeFromParent()
-                        overviewDetalController = nil
-                        self.view.addSubview(self.map)
-                        NSLayoutConstraint.activate(mapConstraints)
+                        overviewDetalController.dismiss {
+                            overviewDetalController.willMove(toParent: nil)
+                            overviewDetalController.view.removeFromSuperview()
+                            overviewDetalController.removeFromParent()
+                            overviewDetalController = nil
+
+                            self.view.addSubview(self.map)
+                            NSLayoutConstraint.activate(mapConstraints)
+
+                            self.view.bringSubviewToFront(toolBar)
+                        }
                     }
 
-                    self.view.bringSubviewToFront(toolBar)
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
 
-                case .test: self.present(TestController(), animated: true)
+                case .test:
+                    self.map.removeAnnotations(self.map.annotations.filter({ annotation in return !annotation.isKind(of: MKUserLocation.self)}))
+                    //self.present(TestController(), animated: true)
                 }
             }
 
@@ -104,15 +111,15 @@ class PresentingController: UIViewController {
             let overviewDetaiTool = toolBar.add(control: overviewDetailButton, id: .overviewDetail, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
             overviewDetaiTool.userData = overviewDetailImage
 
-            let tracksButton = UIButton(type: .system)
-            let tracksButtonImage = UIImage(#imageLiteral(resourceName: "Polyline"))
-            tracksButton.setImage(tracksButtonImage.withRenderingMode(.alwaysOriginal), for: .normal)
-            let tracksButtonTool = toolBar.add(control: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
-            tracksButtonTool.userData = tracksButtonImage
-
-            let testButton = UIButton(type: .system)
-            testButton.backgroundColor = .gray
-            _ = toolBar.add(control: testButton, id: .test, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+//            let tracksButton = UIButton(type: .system)
+//            let tracksButtonImage = UIImage(#imageLiteral(resourceName: "Polyline"))
+//            tracksButton.setImage(tracksButtonImage.withRenderingMode(.alwaysOriginal), for: .normal)
+//            let tracksButtonTool = toolBar.add(control: tracksButton, id: .tracks, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+//            tracksButtonTool.userData = tracksButtonImage
+//
+//            let testButton = UIButton(type: .system)
+//            testButton.backgroundColor = .gray
+//            _ = toolBar.add(control: testButton, id: .test, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: PresentingController.userLocationEventHandler)

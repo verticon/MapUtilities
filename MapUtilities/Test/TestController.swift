@@ -7,25 +7,25 @@
 //
 
 import UIKit
+import MapKit
+import VerticonsToolbox
 
 class TestController: UIViewController {
 
-    class TestSubView : UIView {
-        override func layoutSubviews() {
-            //print("TestSubView - Laying out subviews, orientation = \(getOrientation()) (\(UIDevice.current.orientation))")
-        }
-    }
+    class TestSubView : MKMapView {}
 
-    class TestView : UIView {
+    class TestView : UIView, MKMapViewDelegate{
         let subView = TestSubView()
+        private var frameObserver: NSKeyValueObservation! = nil
 
         init() {
             super.init(frame: .zero)
 
-            backgroundColor = .orange
+            backgroundColor = .black
 
-            subView.backgroundColor = .brown
             addSubview(subView)
+            subView.delegate = self
+            frameObserver = subView.observe(\.bounds, options: [.new]) { mapView, change in print("Frame changed. Region = \(mapView.region)") }
         }
         
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -36,6 +36,21 @@ class TestController: UIViewController {
             let origin = CGPoint(x: `in`.midX - side/2, y: `in`.midY - side/2)
             let frame = CGRect(origin: origin, size: size)
             return frame
+        }
+
+        // When the map view's frame is changed the regionDidChangeAnimated method IS called
+        // but the mapViewDidChangeVisibleRegion method IS NOT.
+        //
+        // Apparently iOS calls mapViewDidChangeVisibleRegion while te region is changing
+        // (pan, zoom, scroll) and then calls regionDidChangeAnimated when the changing ends.
+        // However, this seems to not hold up for an animated frame change.
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            print("Region changed: \(mapView.region), Animated = \(animated)")
+        }
+
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            print("Visible Region Changed: \(mapView.region)")
         }
     }
 
@@ -160,6 +175,42 @@ class TestController: UIViewController {
                 notificationObserver = nil
             }
         }
+ 
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapHandler))
+        (view as? TestView)?.subView.addGestureRecognizer(recognizer)
+    }
+
+    @objc private func tapHandler(_ recognizer: UITapGestureRecognizer) {
+        print()
+
+        switch recognizer.state {
+        case .ended: resize()
+        default: break
+        }
+    }
+
+    private func reposition() {
+        UIView.animate(withDuration: 1,
+            animations: {
+                guard let subView = (self.view as? TestView)?.subView else { return }
+                let delta: CGFloat = subView.center.x > self.view.center.x ? -100 : 100
+                subView.center.x = self.view.center.x + delta
+                subView.center.y = self.view.center.y + delta
+
+            },
+            completion: { _ in /*completion()*/ })
+    }
+
+    private func resize() {
+        guard let subView = (self.view as? TestView)?.subView else { return }
+        subView.center = view.center
+        UIView.animate(withDuration: 1,
+            animations: {
+                let multiplier: CGFloat = subView.bounds.size.width > self.view.bounds.width/2 ? 0.25 : 0.75
+                let newSize = CGSize(width: multiplier * self.view.bounds.size.width, height: multiplier * self.view.bounds.size.height)
+                subView.bounds.size = newSize
+            },
+            completion: { _ in /*completion()*/ })
     }
 
     override var modalTransitionStyle: UIModalTransitionStyle {
@@ -169,7 +220,7 @@ class TestController: UIViewController {
     
     override var modalPresentationStyle: UIModalPresentationStyle {
         get { return .fullScreen }
-        set { }
+        set {}
     }
 }
 
