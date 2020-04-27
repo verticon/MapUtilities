@@ -12,29 +12,44 @@ import VerticonsToolbox
 
 class DualMapsManager : NSObject {
 
+    // When a map is panned or zoomed:
+    //      * mapViewDidChangeVisibleRegion is called multiple times while the pan/zoom is in progress
+    //      * regionDidChangeAnimated is called once at the end.
+    //
+    // regionDidChangeAnimated is called whenever the map's frame is changed. When the user drags the
+    // splitter the frame will be updated as the splitter is moved: regionDidChangeAnimated is called
+    // upon each of those updates. However, if the splitter is animated to a new positio then
+    // regionDidChangeAnimated is only called once.
+
     private class DetailMapViewDelegate : NSObject, MKMapViewDelegate {
+
+        weak var manager: DualMapsManager!
+        var regionChangeCompletionHandler: (()->())!
+
+        init(manager: DualMapsManager) { self.manager = manager }
+
+        // Handle paning and zooming.
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { manager.syncAnnotationWithDetailMap() }
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            guard let handler = regionChangeCompletionHandler else { return }
+            handler()
+            regionChangeCompletionHandler = nil
+        }
+
+        private var firstRender = true
+        func mapViewWillStartRenderingMap(_ mapView: MKMapView) {
+            guard firstRender else { return }
+            manager.detailMap.region = manager.mainMap.region
+            firstRender = false
+        }
+    }
+
+    private class MainMapViewDelegate : NSObject, MKMapViewDelegate {
 
         weak var manager: DualMapsManager!
 
         init(manager: DualMapsManager) { self.manager = manager }
-
-        // Whenthe map is  panned or zoomed:
-        //      * mapViewDidChangeVisibleRegion is called multiple times while the pan/zoom is in progress
-        //      * regionDidChangeAnimated is called once at the end.
-        //
-        // regionDidChangeAnimated is called whenever the map's frame is changed. When the user drags the
-        // splitter the frame will be updated as the splitter is moved: regionDidChangeAnimated is called
-        // upon each of those updates. However, if the splitter is animated to a new positio then regionDidChangeAnimated
-        // is only called once.
-
-        // Handle the paning and zooming that might occur on either map.
-        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
-            print("\n\(mapView === manager.detailMap ? "Detail Map": "Main Map"): mapViewDidChangeVisibleRegion")
-            manager.syncAnnotationWithDetailMap()
-        }
-    }
-
-    private class MainMapViewDelegate : DetailMapViewDelegate {
 
         override func forwardingTarget(for selector: Selector!) -> Any? {
             guard let manager = manager else { return super.forwardingTarget(for: selector) }
@@ -52,17 +67,18 @@ class DualMapsManager : NSObject {
             return result
         }
 
-        override func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
-            super.mapViewDidChangeVisibleRegion(mapView)
+        // Handle paning and zooming.
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            manager.syncAnnotationWithDetailMap()
 
             manager.originalDelegate?.mapViewDidChangeVisibleRegion?(mapView)
         }
 
         // Handle the frame updates that occur when the user drags the splitter.
-        // This only needs to be done for one of the two maps - i.e. it would be
-        // redundant to do it twice in a row for each of the maps.
+        // This only needs to be done for one of the two maps (i.e. it would be
+        // redundant to do it twice in a row for each of the maps). Therefore
+        // we only do it in the main map view delegate
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            print("\n\(mapView === manager.detailMap ? "Detail Map": "Main Map"): regionDidChangeAnimated")
             manager.syncAnnotationWithDetailMap()
 
             manager.originalDelegate?.mapViewDidChangeVisibleRegion?(mapView)
@@ -126,30 +142,29 @@ class DualMapsManager : NSObject {
     private var mainMapDelegate: MKMapViewDelegate?
     private var originalDelegate: MKMapViewDelegate?
 
-    let detailMap = MKMapView()
-    private var detailMapDelegate: MKMapViewDelegate?
+    let detailMap: MKMapView
+    private var detailMapDelegate: DetailMapViewDelegate?
 
     private var detailAnnotation: DetailAnnotation! = nil
 
-    //private var frameObserver: NSKeyValueObservation! = nil
     private var detailRepositioner: UITapGestureRecognizer! = nil
 
     init(mainMap: MKMapView) {
         self.mainMap = mainMap
+
+        detailMap = MKMapView()
 
         super.init()
 
         originalDelegate = mainMap.delegate
         mainMapDelegate = MainMapViewDelegate(manager: self)
         mainMap.delegate = mainMapDelegate
-        detailRepositioner = UITapGestureRecognizer(target: self, action: #selector(repositionDetailAnnotation))
+
+        detailRepositioner = UITapGestureRecognizer(target: self, action: #selector(repositionDetailMapAndAnnotation))
         mainMap.addGestureRecognizer(detailRepositioner)
 
         detailMapDelegate = DetailMapViewDelegate(manager: self)
         detailMap.delegate = detailMapDelegate
- 
-        detailAnnotation = DetailAnnotation()
-
         detailMap.region = mainMap.region
     }
 
@@ -158,32 +173,28 @@ class DualMapsManager : NSObject {
     }
 
     deinit {
-        //frameObserver.invalidate()
         mainMap.removeGestureRecognizer(detailRepositioner)
         mainMap.delegate = originalDelegate
     }
 
-    func zoomDetailMap() {
-        let newDetailRegion = mainMap.region / DualMapsManager.spanRatio
-        detailAnnotation.coordinate = newDetailRegion.center
-        mainMap.addAnnotation(detailAnnotation)
+    func zoomDetailMap(in: Bool, completion: (()->())? = nil) {
+        var newDetailRegion = mainMap.region
+        if `in` { newDetailRegion /= DualMapsManager.spanRatio }
+        detailMapDelegate?.regionChangeCompletionHandler = completion
         detailMap.setRegion(newDetailRegion, animated: true)
     }
     
-    func removeAnnotation(completion: @escaping () -> ()) {
+    func addAnnotation() {
+        guard detailAnnotation == nil else { return }
+        detailAnnotation = DetailAnnotation()
+        detailAnnotation.coordinate = mainMap.region.center
+        mainMap.addAnnotation(detailAnnotation)
+    }
 
-        UIView.animate(withDuration: 1,
-            animations: {
-                guard let annotationView = self.mainMap.view(for: self.detailAnnotation) as? DetailAnnotationView else { return }
-                print("Removing annotation")
-                //annotationView.center = CGPoint(x: self.mainMap.bounds.maxX + annotationView.bounds.width, y: self.mainMap.bounds.maxY + annotationView.bounds.height)
-                annotationView.center.x += 100
-                annotationView.center.y += 100
-            },
-            completion: { _ in
-                self.mainMap.removeAnnotation(self.detailAnnotation)
-                completion()
-        })
+    func removeAnnotation() {
+        guard let annotation = detailAnnotation else { return }
+        self.mainMap.removeAnnotation(annotation)
+        detailAnnotation = nil
     }
 
     private func makeAnnotationView(for: MKAnnotation) -> DetailAnnotationView {
@@ -205,13 +216,14 @@ class DualMapsManager : NSObject {
         return annotationView
     }
 
-    private func syncAnnotationWithDetailMap() { // Update the annotation's center and bounds to match the detail view.
-        //print("syncAnnotationWithDetailMap")
-        detailAnnotation.coordinate = detailMap.centerCoordinate
-        if let annotationView = mainMap.view(for: detailAnnotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
+    // Update the annotation's center and bounds to match the detail view.
+    private func syncAnnotationWithDetailMap() {
+        guard let annotation = detailAnnotation else { return }
+        annotation.coordinate = detailMap.centerCoordinate
+        if let annotationView = mainMap.view(for: annotation) as? DetailAnnotationView { annotationView.updateBounds(self) }
     }
 
-    // As the user drags the detail annotaion, reposition the detail map.
+    // As the user drags the detail annotaion, pan the detail map.
     // Note: iOS updates the detail annotation's coordinate when the drags ends.
     @objc private func trackAnnotationDrag(_ recognizer: UILongPressGestureRecognizer) {
         switch recognizer.state {
@@ -223,15 +235,19 @@ class DualMapsManager : NSObject {
         }
     }
 
-    // When the user taps the main map, reposition the detail annotation to the tapped location
-    @objc private func repositionDetailAnnotation(_ recognizer: UITapGestureRecognizer) {
+    // When the user taps the main map:
+    //      1. Reposition the detail annotation to the tapped location
+    //      2. Recenter the detail map upon the tapped location
+    @objc private func repositionDetailMapAndAnnotation(_ recognizer: UITapGestureRecognizer) {
         switch recognizer.state {
         case .ended:
-            detailAnnotation.coordinate = mainMap.convert(recognizer.location(in: mainMap), toCoordinateFrom: mainMap)
+           let tapPoint = recognizer.location(in: mainMap)
+           let tapLocation = mainMap.convert(tapPoint, toCoordinateFrom: mainMap)
+           detailAnnotation.coordinate = tapLocation
+           detailMap.region.center = tapLocation
        default: break
         }
     }
-
 }
 
 extension DualMapsManager : UIGestureRecognizerDelegate {

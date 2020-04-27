@@ -121,7 +121,7 @@ class OverviewDetailController: UIViewController {
         }
     }
 
-    private let dualMapsManager: DualMapsManager
+    let dualMapsManager: DualMapsManager
     private let mainMapInitialConstraints: [NSLayoutConstraint]
 
     init(mainMap: MKMapView) {
@@ -166,12 +166,18 @@ class OverviewDetailController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        animateSplitter(to: 0, completion: { self.dualMapsManager.zoomDetailMap() })
+        animateSplitter(to: 0, completion: {
+            self.dualMapsManager.addAnnotation()
+            self.dualMapsManager.zoomDetailMap(in: true)
+        })
     }
 
     func dismiss(completion: @escaping () -> ()) {
-        animateSplitter(to: 0.5, completion: {
-            self.dualMapsManager.removeAnnotation(completion: completion)
+        animateSplitter(to: 0, completion: {
+            self.dualMapsManager.zoomDetailMap(in: false) {
+                self.dualMapsManager.removeAnnotation()
+                self.animateSplitter(to: 1, completion: completion)
+            }
         })
     }
 
