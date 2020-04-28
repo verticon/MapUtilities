@@ -12,13 +12,30 @@ import VerticonsToolbox
 
 class PresentingController: UIViewController {
 
+    private class Settings {
+        struct Keys {
+            static let child = "ChildPreference"
+        }
+
+        static var presentAsChild = false {
+            didSet { print("PresentAsChild changed to: \(Settings.presentAsChild)") }
+        }
+
+        static func setup() {
+            _ = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: nil) {  _ in
+                presentAsChild = UserDefaults.standard.bool(forKey: Settings.Keys.child)
+            }
+        }
+    }
+
     private let map = MKMapView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        map.delegate = self
+        Settings.setup()
 
+        map.delegate = self
         map.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(map)
         let mapConstraints = [
@@ -28,7 +45,8 @@ class PresentingController: UIViewController {
             map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ]
         NSLayoutConstraint.activate(mapConstraints)
-        
+
+
         do { // Add the toolBar last so that it is on top.
 
             enum ToolIdentifier {
@@ -44,8 +62,6 @@ class PresentingController: UIViewController {
                 switch tool.id {
                 case .overviewDetail:
 
-                    let presentAsChild = false
-
                     func restoreMap() {
                         self.map.removeFromSuperview() // Constraints are deactivated
                         self.view.addSubview(self.map)
@@ -55,7 +71,7 @@ class PresentingController: UIViewController {
                     }
 
                     self.map.removeFromSuperview() // Constraints are deactivated
-                    if presentAsChild  {
+                    if Settings.presentAsChild  {
                         overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
                             controller.dismiss {
                                 overviewDetalController.willMove(toParent: nil)

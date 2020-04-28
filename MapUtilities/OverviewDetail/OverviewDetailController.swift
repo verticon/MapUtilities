@@ -39,8 +39,6 @@ class OverviewDetailController: UIViewController {
         
         required init?(coder: NSCoder) { fatalError("OverviewDetailView - init(coder:) has not been implemented") }
 
-        deinit { print("SplitterView deinit") }
-
         private lazy var potraitConstraints = [
            upper.topAnchor.constraint(equalTo: self.topAnchor),
            upper.rightAnchor.constraint(equalTo: self.rightAnchor),
@@ -137,8 +135,6 @@ class OverviewDetailController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    deinit { print("OverviewDetailController deinit") }
 
     override func loadView() {
         let splitView = SplitView(main: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
