@@ -32,9 +32,9 @@ class DualMapsManager : NSObject {
         func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) { manager.syncAnnotationWithDetailMap() }
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            guard let handler = regionChangeCompletionHandler else { return }
-            handler()
+            guard let completionHandler = regionChangeCompletionHandler else { return }
             regionChangeCompletionHandler = nil
+            completionHandler()
         }
 
         private var firstRender = true
@@ -177,11 +177,20 @@ class DualMapsManager : NSObject {
         mainMap.delegate = originalDelegate
     }
 
-    func zoomDetailMap(in: Bool, completion: (()->())? = nil) {
-        var newDetailRegion = mainMap.region
-        if `in` { newDetailRegion /= DualMapsManager.spanRatio }
+    func zoomDetailMap(in: Bool /* Zoom in or out? */, completion: (()->())? = nil) {
+        var newRegion = mainMap.region
+        if `in` { newRegion /= DualMapsManager.spanRatio }
         detailMapDelegate?.regionChangeCompletionHandler = completion
-        detailMap.setRegion(newDetailRegion, animated: true)
+        detailMap.setRegion(newRegion, animated: true)
+    }
+    
+    func bounceDetailMap(completion: (()->())? = nil) {
+        let currentRegion = detailMap.region
+        detailMapDelegate?.regionChangeCompletionHandler = {
+            self.detailMapDelegate?.regionChangeCompletionHandler = completion
+            self.detailMap.setRegion(currentRegion, animated: true)
+        }
+        detailMap.setRegion(1.5 * currentRegion, animated: true)
     }
     
     func addAnnotation() {

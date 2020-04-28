@@ -145,7 +145,7 @@ class OverviewDetailController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        do { // Add the toolBar last so that it is on top.
+        do { // Create the Toolbar.
             enum ToolIdentifier {
                 case dismiss
             }
@@ -169,23 +169,26 @@ class OverviewDetailController: UIViewController {
             _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
         }
 
-        // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
-        var previousOrientation: UIDeviceOrientation = .unknown
-        var notificationObserver: NSObjectProtocol?
-        notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
-            let newOrientation = UIDevice.current.orientation
-            //print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
+        do { // Respond to orientation changes
 
-            guard self != nil else  {
-                if let observer = notificationObserver {
-                    NotificationCenter.default.removeObserver(observer)
-                    notificationObserver = nil
+            // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
+            var previousOrientation: UIDeviceOrientation = .unknown
+            var notificationObserver: NSObjectProtocol?
+            notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
+                let newOrientation = UIDevice.current.orientation
+                //print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
+
+                guard self != nil else  {
+                    if let observer = notificationObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                        notificationObserver = nil
+                    }
+                    return
                 }
-                return
-            }
 
-            if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
-            previousOrientation = newOrientation
+                if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
+                previousOrientation = newOrientation
+            }
         }
     }
 
@@ -193,7 +196,9 @@ class OverviewDetailController: UIViewController {
         super.viewDidAppear(animated)
         animateSplitter(to: 0, completion: {
             self.dualMapsManager.addAnnotation()
-            self.dualMapsManager.zoomDetailMap(in: true)
+            self.dualMapsManager.zoomDetailMap(in: true) {
+                self.dualMapsManager.bounceDetailMap()
+            }
         })
     }
 
