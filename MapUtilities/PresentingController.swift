@@ -44,44 +44,48 @@ class PresentingController: UIViewController {
                 switch tool.id {
                 case .overviewDetail:
 
-                    guard let button = tool.control as? UIButton else { fatalError("OverviewDetail tool is not a button???") }
+                    let presentAsChild = false
 
-                    let presentAsChild = true
+                    func restoreMap() {
+                        self.map.removeFromSuperview() // Constraints are deactivated
+                        self.view.addSubview(self.map)
+                        NSLayoutConstraint.activate(mapConstraints)
 
-                    button.isSelected = !button.isSelected
-                    if button.isSelected  {
-                        if presentAsChild {
-                            self.map.removeFromSuperview()
-                            overviewDetalController = OverviewDetailController(mainMap: self.map)
-                            self.addChild(overviewDetalController)
-                            self.view.addSubview(overviewDetalController.view)
-                            overviewDetalController.didMove(toParent: self)
-
-                            overviewDetalController.view.translatesAutoresizingMaskIntoConstraints = false
-                            NSLayoutConstraint.activate([
-                                overviewDetalController.view.topAnchor.constraint(equalTo: self.view.topAnchor),
-                                overviewDetalController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-                                overviewDetalController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-                                overviewDetalController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-                            ])
-
-                            self.view.bringSubviewToFront(toolBar)
-                        }
+                        self.view.bringSubviewToFront(toolBar)
                     }
-                    else {
-                        if presentAsChild {
-                            overviewDetalController.dismiss {
+
+                    self.map.removeFromSuperview() // Constraints are deactivated
+                    if presentAsChild  {
+                        overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
+                            controller.dismiss {
                                 overviewDetalController.willMove(toParent: nil)
                                 overviewDetalController.view.removeFromSuperview()
                                 overviewDetalController.removeFromParent()
                                 overviewDetalController = nil
 
-                                self.view.addSubview(self.map)
-                                NSLayoutConstraint.activate(mapConstraints)
+                                restoreMap()
+                           }
+                        }
+                        self.addChild(overviewDetalController)
+                        self.view.addSubview(overviewDetalController.view)
+                        overviewDetalController.didMove(toParent: self)
 
-                                self.view.bringSubviewToFront(toolBar)
+                        overviewDetalController.view.translatesAutoresizingMaskIntoConstraints = false
+                        NSLayoutConstraint.activate([
+                            overviewDetalController.view.topAnchor.constraint(equalTo: self.view.topAnchor),
+                            overviewDetalController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+                            overviewDetalController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+                            overviewDetalController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
+                        ])
+                    }
+                    else {
+                        let controller = OverviewDetailController(mainMap: self.map) { controller in
+                            controller.dismiss() {
+                                restoreMap()
+                                controller.dismiss(animated: true, completion: nil)
                             }
                         }
+                        self.present(controller, animated: true)
                     }
 
 

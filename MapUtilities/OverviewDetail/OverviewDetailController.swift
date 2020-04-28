@@ -16,17 +16,19 @@ class OverviewDetailController: UIViewController {
     class SplitView : UIView {
 
         let upper: UIView
-        let splitter = Splitter()
+        let splitter: Splitter
         let lower: UIView
         private var currentConstraints: [NSLayoutConstraint]?
 
-        init(overview: UIView, detail: UIView) {
-            self.upper = overview
+        init(main: UIView, detail: UIView) {
+            self.upper = main
+            splitter = Splitter()
             self.lower = detail
+
             super.init(frame: .zero)
 
-            overview.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(overview)
+            main.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(main)
 
             splitter.translatesAutoresizingMaskIntoConstraints = false
             addSubview(splitter)
@@ -36,7 +38,9 @@ class OverviewDetailController: UIViewController {
         }
         
         required init?(coder: NSCoder) { fatalError("OverviewDetailView - init(coder:) has not been implemented") }
-        
+
+        deinit { print("SplitterView deinit") }
+
         private lazy var potraitConstraints = [
            upper.topAnchor.constraint(equalTo: self.topAnchor),
            upper.rightAnchor.constraint(equalTo: self.rightAnchor),
@@ -102,7 +106,6 @@ class OverviewDetailController: UIViewController {
             NSLayoutConstraint.activate(currentConstraints!)
         }
 
-
         // The magnitude of the splitter's offset remains the same in portrait or in landscape; the splitter is always
         // moving through the device's longer dimension (y in portrait, x in landscape). The sign (+/-) might, however,
         // change when the orientation changes.
@@ -122,10 +125,10 @@ class OverviewDetailController: UIViewController {
     }
 
     let dualMapsManager: DualMapsManager
-    private let mainMapInitialConstraints: [NSLayoutConstraint]
+    private let dismissHandler: (OverviewDetailController) -> Void
 
-    init(mainMap: MKMapView) {
-        mainMapInitialConstraints = mainMap.constraints
+    init(mainMap: MKMapView, dismissHandler: @escaping (OverviewDetailController) -> Void) {
+        self.dismissHandler = dismissHandler
         dualMapsManager = DualMapsManager(mainMap: mainMap)
 
         super.init(nibName: nil, bundle: nil)
@@ -134,15 +137,41 @@ class OverviewDetailController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    deinit { print("OverviewDetailController deinit") }
+
     override func loadView() {
-        let splitView = SplitView(overview: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
+        let splitView = SplitView(main: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
         splitView.splitter.percentOffset = 1
         view = splitView
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        do { // Add the toolBar last so that it is on top.
+            enum ToolIdentifier {
+                case dismiss
+            }
+
+            let toolBar = ToolBar<ToolIdentifier>(parent: view)
+
+            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
+                switch tool.id {
+                case .dismiss:
+                    guard let controller = self else { return }
+                    controller.dismissHandler(controller)
+                }
+            }
+
+            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+                switch tool.id {
+                case .dismiss: tool.control.setNeedsDisplay()
+                }
+            }
+            
+            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+        }
 
         // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
         var previousOrientation: UIDeviceOrientation = .unknown
@@ -172,7 +201,7 @@ class OverviewDetailController: UIViewController {
         })
     }
 
-    func dismiss(completion: @escaping () -> ()) {
+    func dismiss(completion: (() -> ())?) {
         animateSplitter(to: 0, completion: {
             self.dualMapsManager.zoomDetailMap(in: false) {
                 self.dualMapsManager.removeAnnotation()
@@ -181,22 +210,14 @@ class OverviewDetailController: UIViewController {
         })
     }
 
-    func animateSplitter(to percentOffset: CGFloat, completion: @escaping () -> ()) {
+    func animateSplitter(to percentOffset: CGFloat, completion: (() -> ())?) {
         guard  let splitView = view as? SplitView else { return }
-
-        let frameObserver = splitView.upper.observe(\.bounds, options: [.new]) { [weak self] view, change in
-            print("\nFrame Observer")
-            //self?.syncAnnotationWithDetailMap()
-        }
-
 
         splitView.splitter.percentOffset = percentOffset
         splitView.updateSplitterPosition()
         UIView.animate(withDuration: 1,
-            animations: { splitView.layoutIfNeeded() },
-            completion: { _ in
-                frameObserver.invalidate()
-                completion()
-        })
+            animations: { splitView.layoutIfNeeded() }, // The "magic" for animating constraint changes
+            completion: { _ in completion?() }
+        )
     }
 }
