@@ -177,22 +177,32 @@ class DualMapsManager : NSObject {
         mainMap.delegate = originalDelegate
     }
 
-    func zoomDetailMap(in: Bool /* Zoom in or out? */, completion: (()->())? = nil) {
+    enum Direction {
+        case `in`
+        case out
+    }
+    func zoomDetailMap(direction: Direction, completion: (()->())? = nil) {
         var newRegion = mainMap.region
-        if `in` { newRegion /= DualMapsManager.spanRatio }
-        detailMapDelegate?.regionChangeCompletionHandler = completion
-        detailMap.setRegion(newRegion, animated: true)
+        if direction == .in { newRegion /= DualMapsManager.spanRatio }
+        MKMapView.animate(withDuration: 1, animations: { self.detailMap.setRegion(newRegion, animated: true) }, completion: { _ in completion?() })
     }
-    
-    func bounceDetailMap(completion: (()->())? = nil) {
+
+    func pulseDetailMap(completion: (()->())? = nil) {
         let currentRegion = detailMap.region
-        detailMapDelegate?.regionChangeCompletionHandler = {
-            self.detailMapDelegate?.regionChangeCompletionHandler = completion
-            self.detailMap.setRegion(currentRegion, animated: true)
+        let expandedRegion = 1.5 * currentRegion
+
+        func pulse(count: Int) {
+            guard count > 0 else { completion?(); return }
+            MKMapView.animate(withDuration: 0.25, animations: { self.detailMap.setRegion(expandedRegion, animated: true) }) { _ in
+                MKMapView.animate(withDuration: 0.25, animations: { self.detailMap.setRegion(currentRegion, animated: true) }) { _ in
+                    pulse(count: count - 1)
+                }
+            }
         }
-        detailMap.setRegion(1.5 * currentRegion, animated: true)
+
+        pulse(count: 3)
     }
-    
+
     func addAnnotation() {
         guard detailAnnotation == nil else { return }
         detailAnnotation = DetailAnnotation()
@@ -252,7 +262,7 @@ class DualMapsManager : NSObject {
         case .ended:
            let tapPoint = recognizer.location(in: mainMap)
            let tapLocation = mainMap.convert(tapPoint, toCoordinateFrom: mainMap)
-           detailAnnotation.coordinate = tapLocation
+           if let annotation = detailAnnotation { annotation.coordinate = tapLocation }
            detailMap.region.center = tapLocation
        default: break
         }

@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E105E0CE23CBB227007B32C7 /* TestController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E105E0CD23CBB227007B32C7 /* TestController.swift */; };
+		E105E0CE23CBB227007B32C7 /* TestController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = E105E0CD23CBB227007B32C7 /* TestController1.swift */; };
 		E13C3E3D2458AFB200FE5E9D /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E13C3E3C2458AFB200FE5E9D /* Settings.bundle */; };
 		E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */; };
 		E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0D238180630019C7B5 /* DismissButton.swift */; };
 		E14F1C77237C212600FF3E03 /* PresentingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14F1C76237C212600FF3E03 /* PresentingController.swift */; };
+		E16E253A245DAE7400853630 /* TestController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16E2539245DAE7400853630 /* TestController2.swift */; };
+		E16E2541245DB41200853630 /* JiaLissaAndFriend.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E16E2540245DB41200853630 /* JiaLissaAndFriend.jpg */; };
 		E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */; };
 		E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */; };
 		E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */; };
@@ -41,11 +43,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E105E0CD23CBB227007B32C7 /* TestController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestController.swift; sourceTree = "<group>"; };
+		E105E0CD23CBB227007B32C7 /* TestController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestController1.swift; sourceTree = "<group>"; };
 		E13C3E3C2458AFB200FE5E9D /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = Settings.bundle; path = MapUtilities/Settings.bundle; sourceTree = "<group>"; };
 		E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TracksViewController.swift; sourceTree = "<group>"; };
 		E1427F0D238180630019C7B5 /* DismissButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissButton.swift; sourceTree = "<group>"; };
 		E14F1C76237C212600FF3E03 /* PresentingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentingController.swift; sourceTree = "<group>"; };
+		E16E2539245DAE7400853630 /* TestController2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestController2.swift; sourceTree = "<group>"; };
+		E16E2540245DB41200853630 /* JiaLissaAndFriend.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = JiaLissaAndFriend.jpg; sourceTree = "<group>"; };
 		E1A831E4237AF2E900DAE8CE /* MapUtilities.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MapUtilities.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1A831E7237AF2E900DAE8CE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E1A831E9237AF2E900DAE8CE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -76,7 +80,8 @@
 		E105E0CF23CE2D88007B32C7 /* Test */ = {
 			isa = PBXGroup;
 			children = (
-				E105E0CD23CBB227007B32C7 /* TestController.swift */,
+				E105E0CD23CBB227007B32C7 /* TestController1.swift */,
+				E16E2539245DAE7400853630 /* TestController2.swift */,
 			);
 			path = Test;
 			sourceTree = "<group>";
@@ -99,9 +104,19 @@
 			path = OverviewDetail;
 			sourceTree = "<group>";
 		};
+		E16E253F245DB36400853630 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E16E2540245DB41200853630 /* JiaLissaAndFriend.jpg */,
+			);
+			name = Resources;
+			path = MapUtilities/Resources;
+			sourceTree = SOURCE_ROOT;
+		};
 		E1A831DB237AF2E900DAE8CE = {
 			isa = PBXGroup;
 			children = (
+				E16E253F245DB36400853630 /* Resources */,
 				E13C3E3C2458AFB200FE5E9D /* Settings.bundle */,
 				E1A831E6237AF2E900DAE8CE /* MapUtilities */,
 				E1A831E5237AF2E900DAE8CE /* Products */,
@@ -207,6 +222,7 @@
 				E1A831F4237AF2EA00DAE8CE /* LaunchScreen.storyboard in Resources */,
 				E13C3E3D2458AFB200FE5E9D /* Settings.bundle in Resources */,
 				E1A831F1237AF2EA00DAE8CE /* Assets.xcassets in Resources */,
+				E16E2541245DB41200853630 /* JiaLissaAndFriend.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,7 +236,7 @@
 				E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */,
 				E1F8A33D237B11C600977F7C /* DualMapsManager.swift in Sources */,
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
-				E105E0CE23CBB227007B32C7 /* TestController.swift in Sources */,
+				E105E0CE23CBB227007B32C7 /* TestController1.swift in Sources */,
 				E1F8A33C237B11C600977F7C /* ToolBar.swift in Sources */,
 				E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */,
 				E1D515CA23DA1B4400DA0645 /* Utilities.swift in Sources */,
@@ -229,6 +245,7 @@
 				E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */,
 				E1A831EA237AF2E900DAE8CE /* SceneDelegate.swift in Sources */,
 				E1F8A33B237B11C600977F7C /* Splitter.swift in Sources */,
+				E16E253A245DAE7400853630 /* TestController2.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

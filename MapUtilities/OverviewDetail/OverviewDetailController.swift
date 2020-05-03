@@ -27,6 +27,8 @@ class OverviewDetailController: UIViewController {
 
             super.init(frame: .zero)
 
+            backgroundColor = .orange
+
             main.translatesAutoresizingMaskIntoConstraints = false
             addSubview(main)
 
@@ -122,7 +124,7 @@ class OverviewDetailController: UIViewController {
         }
     }
 
-    let dualMapsManager: DualMapsManager
+    var dualMapsManager: DualMapsManager!
     private let dismissHandler: (OverviewDetailController) -> Void
 
     init(mainMap: MKMapView, dismissHandler: @escaping (OverviewDetailController) -> Void) {
@@ -192,26 +194,29 @@ class OverviewDetailController: UIViewController {
         }
     }
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        animateSplitter(to: 0, completion: {
+    func showDetail(completion: (() -> ())? = nil) {
+        animateSplitter(to: 0) {
             self.dualMapsManager.addAnnotation()
-            self.dualMapsManager.zoomDetailMap(in: true) {
-                self.dualMapsManager.bounceDetailMap()
+            self.dualMapsManager.zoomDetailMap(direction: .in) {
+                self.dualMapsManager.pulseDetailMap() {
+                    completion?()
+                }
             }
-        })
+        }
     }
 
-    func dismiss(completion: (() -> ())?) {
+    func hideDetail(completion: (() -> ())? = nil) {
         animateSplitter(to: 0, completion: {
-            self.dualMapsManager.zoomDetailMap(in: false) {
+            self.dualMapsManager.zoomDetailMap(direction: .out) {
                 self.dualMapsManager.removeAnnotation()
-                self.animateSplitter(to: 1, completion: completion)
+                self.animateSplitter(to: 1) {
+                    completion?()
+                }
             }
         })
     }
 
-    func animateSplitter(to percentOffset: CGFloat, completion: (() -> ())?) {
+    private func animateSplitter(to percentOffset: CGFloat, completion: (() -> ())? = nil) {
         guard  let splitView = view as? SplitView else { return }
 
         splitView.splitter.percentOffset = percentOffset
@@ -221,4 +226,19 @@ class OverviewDetailController: UIViewController {
             completion: { _ in completion?() }
         )
     }
+
+    func presentSnapshot() {
+        if let snapshot = self.view.snapshotView(afterScreenUpdates: false) { view = snapshot }
+    }
+
+    override var modalPresentationStyle: UIModalPresentationStyle {
+        get { return .fullScreen }
+        set {}
+    }
+
+    override var modalTransitionStyle: UIModalTransitionStyle {
+        get { return .flipHorizontal }
+        set {}
+    }
+
 }

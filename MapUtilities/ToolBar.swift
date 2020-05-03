@@ -78,7 +78,7 @@ class ToolBar<ToolIdentifier> : UIStackView {
 
     private var tools = [ToolBarTool]()
 
-    init(parent: UIView) {
+    init(parent: UIView, inset: CGFloat = 20) {
 
         func makeShape(with frame: CGRect) -> CAShapeLayer {
             let path = UIBezierPath.init(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight, .bottomRight, .bottomLeft], cornerRadii: CGSize.init(width: 5, height: 5))
@@ -102,8 +102,8 @@ class ToolBar<ToolIdentifier> : UIStackView {
             parent.addSubview(self)
 
             NSLayoutConstraint.activate( [
-                self.topAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.topAnchor, constant: 20),
-                self.rightAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.rightAnchor, constant: -20),
+                self.topAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.topAnchor, constant: inset),
+                self.rightAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.rightAnchor, constant: -inset),
                 self.widthAnchor.constraint(equalToConstant: 35),
                 self.heightAnchor.constraint(equalToConstant:  35)
            ])

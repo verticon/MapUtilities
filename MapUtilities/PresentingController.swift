@@ -17,9 +17,7 @@ class PresentingController: UIViewController {
             static let child = "ChildPreference"
         }
 
-        static var presentAsChild = false {
-            didSet { print("PresentAsChild changed to: \(Settings.presentAsChild)") }
-        }
+        static var presentAsChild = false
 
         static func setup() {
             _ = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: nil) {  _ in
@@ -32,18 +30,23 @@ class PresentingController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        view.backgroundColor = .lightGray
         Settings.setup()
+
+        func getConstraints(for: UIView) -> [NSLayoutConstraint] {
+            let percentInset: CGFloat = 0.85
+            return [
+                `for`.centerXAnchor.constraint(equalToSystemSpacingAfter: view.centerXAnchor, multiplier: 1),
+                `for`.centerYAnchor.constraint(equalToSystemSpacingBelow: view.centerYAnchor, multiplier: 1),
+                `for`.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: percentInset),
+                `for`.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: percentInset)
+            ]
+        }
 
         map.delegate = self
         map.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(map)
-        let mapConstraints = [
-            map.topAnchor.constraint(equalTo: view.topAnchor),
-            map.rightAnchor.constraint(equalTo: view.rightAnchor),
-            map.leftAnchor.constraint(equalTo: view.leftAnchor),
-            map.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ]
+        let mapConstraints = getConstraints(for: map)
         NSLayoutConstraint.activate(mapConstraints)
 
 
@@ -55,9 +58,8 @@ class PresentingController: UIViewController {
                 case test
             }
 
-            let toolBar = ToolBar<ToolIdentifier>(parent: view)
+            let toolBar = ToolBar<ToolIdentifier>(parent: view, inset: 40)
 
-            var overviewDetalController: OverviewDetailController!
             let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
                 switch tool.id {
                 case .overviewDetail:
@@ -70,10 +72,10 @@ class PresentingController: UIViewController {
                         self.view.bringSubviewToFront(toolBar)
                     }
 
-                    self.map.removeFromSuperview() // Constraints are deactivated
                     if Settings.presentAsChild  {
+                        var overviewDetalController: OverviewDetailController!
                         overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
-                            controller.dismiss {
+                            controller.hideDetail {
                                 overviewDetalController.willMove(toParent: nil)
                                 overviewDetalController.view.removeFromSuperview()
                                 overviewDetalController.removeFromParent()
@@ -82,32 +84,32 @@ class PresentingController: UIViewController {
                                 restoreMap()
                            }
                         }
+                        self.map.removeFromSuperview() // Constraints are deactivated
                         self.addChild(overviewDetalController)
                         self.view.addSubview(overviewDetalController.view)
                         overviewDetalController.didMove(toParent: self)
 
                         overviewDetalController.view.translatesAutoresizingMaskIntoConstraints = false
-                        NSLayoutConstraint.activate([
-                            overviewDetalController.view.topAnchor.constraint(equalTo: self.view.topAnchor),
-                            overviewDetalController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-                            overviewDetalController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-                            overviewDetalController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-                        ])
+                        NSLayoutConstraint.activate(getConstraints(for: overviewDetalController.view))
                     }
                     else {
+                        let snapshot = self.view.snapshotView(afterScreenUpdates: false)
+                        if snapshot != nil { self.view.addSubview(snapshot!) }
+                        self.map.removeFromSuperview() // Constraints are deactivated
                         let controller = OverviewDetailController(mainMap: self.map) { controller in
-                            controller.dismiss() {
+                            controller.hideDetail() {
+                                controller.presentSnapshot()
                                 restoreMap()
+                                if let snapshot = snapshot { snapshot.removeFromSuperview() }
                                 controller.dismiss(animated: true, completion: nil)
                             }
                         }
-                        self.present(controller, animated: true)
+                        self.present(controller, animated: true) { controller.showDetail() }
                     }
-
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
 
-                case .test: break
+                case .test: self.present(TestController2(), animated: true)
                 }
             }
 

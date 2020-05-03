@@ -10,11 +10,11 @@ import UIKit
 import MapKit
 import VerticonsToolbox
 
-class TestController: UIViewController {
+class TestController1 : UIViewController {
 
     class TestSubView : MKMapView {}
 
-    class TestView : UIView, MKMapViewDelegate{
+    class TestView : UIView, MKMapViewDelegate {
         let subView = TestSubView()
         private var frameObserver: NSKeyValueObservation! = nil
 
@@ -38,12 +38,11 @@ class TestController: UIViewController {
             return frame
         }
 
-        // When the map view's frame is changed the regionDidChangeAnimated method IS called
-        // but the mapViewDidChangeVisibleRegion method IS NOT.
+        // When a map is panned or zoomed:
+        //      * mapViewDidChangeVisibleRegion is called multiple times while the pan/zoom is in progress
+        //      * regionDidChangeAnimated is called once at the end.
         //
-        // Apparently iOS calls mapViewDidChangeVisibleRegion while te region is changing
-        // (pan, zoom, scroll) and then calls regionDidChangeAnimated when the changing ends.
-        // However, this seems to not hold up for an animated frame change.
+        // regionDidChangeAnimated is called whenever the map's frame is changed.
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             print("Region changed: \(mapView.region), Animated = \(animated)")
