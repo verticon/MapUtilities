@@ -58,20 +58,25 @@ class PresentingController: UIViewController {
                 case test
             }
 
-            let toolBar = ToolBar<ToolIdentifier>(parent: view, inset: 40)
+            let toolBar = ToolBar<ToolIdentifier>(parent: map)
 
             let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
                 switch tool.id {
                 case .overviewDetail:
 
+                    func removeMap() {
+                        toolBar.removeFromSuperview()
+                        self.map.removeFromSuperview() // Constraints are deactivated
+                    }
+
                     func restoreMap() {
                         self.map.removeFromSuperview() // Constraints are deactivated
                         self.view.addSubview(self.map)
                         NSLayoutConstraint.activate(mapConstraints)
-
-                        self.view.bringSubviewToFront(toolBar)
+                        toolBar.add(to: self.map)
                     }
 
+                    removeMap()
                     if Settings.presentAsChild  {
                         var overviewDetalController: OverviewDetailController!
                         overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
@@ -84,7 +89,6 @@ class PresentingController: UIViewController {
                                 restoreMap()
                            }
                         }
-                        self.map.removeFromSuperview() // Constraints are deactivated
                         self.addChild(overviewDetalController)
                         self.view.addSubview(overviewDetalController.view)
                         overviewDetalController.didMove(toParent: self)
@@ -95,7 +99,6 @@ class PresentingController: UIViewController {
                     else {
                         let snapshot = self.view.snapshotView(afterScreenUpdates: false)
                         if snapshot != nil { self.view.addSubview(snapshot!) }
-                        self.map.removeFromSuperview() // Constraints are deactivated
                         let controller = OverviewDetailController(mainMap: self.map) { controller in
                             controller.hideDetail() {
                                 controller.presentSnapshot()

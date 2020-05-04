@@ -77,7 +77,7 @@ class ToolBar<ToolIdentifier> : UIStackView {
     // ****************************************************************************************************
 
     private var tools = [ToolBarTool]()
-
+    
     init(parent: UIView, inset: CGFloat = 20) {
 
         func makeShape(with frame: CGRect) -> CAShapeLayer {
@@ -97,18 +97,6 @@ class ToolBar<ToolIdentifier> : UIStackView {
             toolbar.layer.shadowPath = path
         }
 
-        func addToSuperView() {
-            self.translatesAutoresizingMaskIntoConstraints = false
-            parent.addSubview(self)
-
-            NSLayoutConstraint.activate( [
-                self.topAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.topAnchor, constant: inset),
-                self.rightAnchor.constraint(equalTo: parent.safeAreaLayoutGuide.rightAnchor, constant: -inset),
-                self.widthAnchor.constraint(equalToConstant: 35),
-                self.heightAnchor.constraint(equalToConstant:  35)
-           ])
-        }
-
         // ****************************************************************************************************
 
         super.init(frame: CGRect.zero)
@@ -121,7 +109,7 @@ class ToolBar<ToolIdentifier> : UIStackView {
         self.layer.borderWidth = 2
         self.layer.cornerRadius = 5
         
-        addToSuperView()
+        add(to: parent, inset: inset)
 
         self.axis = .vertical
         self.distribution = .fillEqually
@@ -130,7 +118,20 @@ class ToolBar<ToolIdentifier> : UIStackView {
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-   
+
+    func add(to: UIView, inset: CGFloat = 20) {
+        self.removeFromSuperview()
+        self.translatesAutoresizingMaskIntoConstraints = false
+        to.addSubview(self)
+
+        NSLayoutConstraint.activate( [
+            self.topAnchor.constraint(equalTo: to.safeAreaLayoutGuide.topAnchor, constant: inset),
+            self.rightAnchor.constraint(equalTo: to.safeAreaLayoutGuide.rightAnchor, constant: -inset),
+            self.widthAnchor.constraint(equalToConstant: 35),
+            self.heightAnchor.constraint(equalToConstant:  35)
+       ])
+    }
+
     func add(control: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) -> AnyTool<ToolIdentifier> {
         self.addArrangedSubview(control)
 
