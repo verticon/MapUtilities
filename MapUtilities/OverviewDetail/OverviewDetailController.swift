@@ -215,7 +215,7 @@ class OverviewDetailController: UIViewController {
     }
 
     func hideDetail(completion: (() -> ())? = nil) {
-        dualMapsManager.fadeAnnotationView() {
+        dualMapsManager.removeDetailAnnotation() {
             self.animateSplitter(to: 1) {
                 completion?()
             }

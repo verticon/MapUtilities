@@ -240,16 +240,23 @@ class DualMapsManager : NSObject {
         mainMap.addAnnotation(detailAnnotation)
     }
 
-    func removeAnnotation() {
-        guard let annotation = detailAnnotation else { return }
-        self.mainMap.removeAnnotation(annotation)
-        detailAnnotation = nil
-    }
+    // Note: It is possible (unlikely) that the completion function will be called before the method returns.
+    func removeDetailAnnotation(completion: (()->())? = nil) {
+        guard let annotation = detailAnnotation else {
+            completion?()
+            return
+        }
 
-    func fadeAnnotationView(completion: (()->())? = nil) {
-        guard let annotation = detailAnnotation else { completion?(); return }
-        guard let annotationView = mainMap.view(for: annotation) as? DetailAnnotationView  else { completion?(); return }
-        MKMapView.animate(withDuration: 1, animations: { annotationView.alpha = 0 }, completion: { _ in completion?() })
+        guard let annotationView = mainMap.view(for: annotation) as? DetailAnnotationView  else {
+            mainMap.removeAnnotation(annotation)
+            completion?()
+            return
+        }
+
+        MKMapView.animate(withDuration: 0.5, animations: { annotationView.alpha = 0 }) { _ in
+            self.mainMap.removeAnnotation(annotation)
+            completion?()
+        }
     }
 
 
