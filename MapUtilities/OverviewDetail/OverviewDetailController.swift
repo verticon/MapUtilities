@@ -194,6 +194,15 @@ class OverviewDetailController: UIViewController {
         }
     }
 
+    // I had A LOT of trouble getting the detail map's initial region to match that of the main map.
+    override func viewDidAppear(_ animated: Bool) {
+        let main = dualMapsManager.mainMap
+        let detail = dualMapsManager.detailMap
+
+        detail.centerCoordinate = main.centerCoordinate
+        detail.region.span = Double(detail.bounds.height / main.bounds.height) * main.region.span
+    }
+
     func showDetail(completion: (() -> ())? = nil) {
         animateSplitter(to: 0) {
             self.dualMapsManager.addAnnotation()
