@@ -82,7 +82,7 @@ class Splitter: UIView {
 
                 let panGestureDelta = recognizer.translation(in: self.superview)
 
-                let limit = self.maxOffset - 2*TouchView.thickness // Don't drag too close to the edge
+                let limit = self.maxOffset - TouchView.thickness // Don't drag too close to the edge
                 var newOffset = initialOffset + (self.isVertical ? panGestureDelta.y : panGestureDelta.x)
                 if abs(newOffset) > limit { newOffset = newOffset >= 0 ? limit : -limit }
 
