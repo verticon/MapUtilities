@@ -99,14 +99,26 @@ class DualMapsManager : NSObject {
 
     private class DetailAnnotationView : MKAnnotationView {
 
-        private func setColors() {
+        func setColors(invert: Bool = false) {
             if self.traitCollection.userInterfaceStyle == .light {
-                backgroundColor = UIColor.darkGray
-                layer.borderColor = UIColor.black.cgColor
+                if invert {
+                    backgroundColor = UIColor.red
+                    layer.borderColor = UIColor.lightGray.cgColor
+                }
+                else {
+                    backgroundColor = UIColor.lightGray
+                    layer.borderColor = UIColor.red.cgColor
+                }
             }
             else {
-                backgroundColor = UIColor.white
-                layer.borderColor = UIColor.blue.cgColor
+                if invert {
+                    backgroundColor = UIColor.blue
+                    layer.borderColor = UIColor.white.cgColor
+                }
+                else {
+                    backgroundColor = UIColor.white
+                    layer.borderColor = UIColor.blue.cgColor
+                }
             }
         }
 
@@ -191,16 +203,34 @@ class DualMapsManager : NSObject {
         let currentRegion = detailMap.region
         let expandedRegion = 1.5 * currentRegion
 
-        func pulse(count: Int) {
-            guard count > 0 else { completion?(); return }
-            MKMapView.animate(withDuration: 0.25, animations: { self.detailMap.setRegion(expandedRegion, animated: true) }) { _ in
-                MKMapView.animate(withDuration: 0.25, animations: { self.detailMap.setRegion(currentRegion, animated: true) }) { _ in
-                    pulse(count: count - 1)
-                }
+        func pulse(repetitions: Int) {
+            guard repetitions > 0 else { completion?(); return }
+
+            var annotationView: DetailAnnotationView? = nil
+            if let annotation = detailAnnotation {
+                annotationView = mainMap.view(for: annotation) as? DetailAnnotationView
             }
+
+            MKMapView.animate(withDuration: 0.25,
+                animations: { // Zoom out
+                    self.detailMap.setRegion(expandedRegion, animated: true)
+                    if let view = annotationView { view.setColors(invert: true) }
+                },
+                completion: { _ in
+                    MKMapView.animate(withDuration: 0.25,
+                        animations: { // Zoom back in
+                            self.detailMap.setRegion(currentRegion, animated: true)
+                            if let view = annotationView { view.setColors(invert: false) }
+                        },
+                        completion: { _ in
+                            pulse(repetitions: repetitions - 1)
+                        }
+                    )
+                }
+            )
         }
 
-        pulse(count: 3)
+        pulse(repetitions: 3)
     }
 
     func addAnnotation() {
