@@ -246,6 +246,13 @@ class DualMapsManager : NSObject {
         detailAnnotation = nil
     }
 
+    func fadeAnnotationView(completion: (()->())? = nil) {
+        guard let annotation = detailAnnotation else { completion?(); return }
+        guard let annotationView = mainMap.view(for: annotation) as? DetailAnnotationView  else { completion?(); return }
+        MKMapView.animate(withDuration: 1, animations: { annotationView.alpha = 0 }, completion: { _ in completion?() })
+    }
+
+
     private func makeAnnotationView(for: MKAnnotation) -> DetailAnnotationView {
         print("makeAnnotationView")
         let annotationView = DetailAnnotationView(annotation: `for`)

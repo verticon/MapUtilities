@@ -215,14 +215,11 @@ class OverviewDetailController: UIViewController {
     }
 
     func hideDetail(completion: (() -> ())? = nil) {
-        animateSplitter(to: 0, completion: {
-            self.dualMapsManager.zoomDetailMap(direction: .out) {
-                self.dualMapsManager.removeAnnotation()
-                self.animateSplitter(to: 1) {
-                    completion?()
-                }
+        dualMapsManager.fadeAnnotationView() {
+            self.animateSplitter(to: 1) {
+                completion?()
             }
-        })
+        }
     }
 
     private func animateSplitter(to percentOffset: CGFloat, completion: (() -> ())? = nil) {
