@@ -99,27 +99,11 @@ class DualMapsManager : NSObject {
 
     private class DetailAnnotationView : MKAnnotationView {
 
+        var background: UIColor { return traitCollection.userInterfaceStyle == .light ? .lightGray : .white }
+        var border: UIColor { return traitCollection.userInterfaceStyle == .light ? .red : .blue }
         func setColors(invert: Bool = false) {
-            if self.traitCollection.userInterfaceStyle == .light {
-                if invert {
-                    backgroundColor = UIColor.red
-                    layer.borderColor = UIColor.lightGray.cgColor
-                }
-                else {
-                    backgroundColor = UIColor.lightGray
-                    layer.borderColor = UIColor.red.cgColor
-                }
-            }
-            else {
-                if invert {
-                    backgroundColor = UIColor.blue
-                    layer.borderColor = UIColor.white.cgColor
-                }
-                else {
-                    backgroundColor = UIColor.white
-                    layer.borderColor = UIColor.blue.cgColor
-                }
-            }
+            backgroundColor = invert ? border : background
+            layer.borderColor = (invert ? background : border).cgColor
         }
 
         init(annotation: MKAnnotation?) {
@@ -203,8 +187,17 @@ class DualMapsManager : NSObject {
         let currentRegion = detailMap.region
         let expandedRegion = 1.5 * currentRegion
 
+        let filter = UIView(frame: detailMap.bounds)
+        filter.alpha = 0
+        filter.backgroundColor = .red
+        detailMap.addSubview(filter)
+
         func pulse(repetitions: Int) {
-            guard repetitions > 0 else { completion?(); return }
+            guard repetitions > 0 else {
+                filter.removeFromSuperview()
+                completion?()
+                return
+            }
 
             var annotationView: DetailAnnotationView? = nil
             if let annotation = detailAnnotation {
@@ -215,12 +208,14 @@ class DualMapsManager : NSObject {
                 animations: { // Zoom out
                     self.detailMap.setRegion(expandedRegion, animated: true)
                     if let view = annotationView { view.setColors(invert: true) }
+                    filter.alpha = 0.2
                 },
                 completion: { _ in
                     MKMapView.animate(withDuration: 0.25,
                         animations: { // Zoom back in
                             self.detailMap.setRegion(currentRegion, animated: true)
                             if let view = annotationView { view.setColors(invert: false) }
+                            filter.alpha = 0
                         },
                         completion: { _ in
                             pulse(repetitions: repetitions - 1)
@@ -258,7 +253,6 @@ class DualMapsManager : NSObject {
             completion?()
         }
     }
-
 
     private func makeAnnotationView(for: MKAnnotation) -> DetailAnnotationView {
         print("makeAnnotationView")
