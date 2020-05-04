@@ -147,30 +147,6 @@ class OverviewDetailController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        do { // Create the Toolbar.
-            enum ToolIdentifier {
-                case dismiss
-            }
-
-            let toolBar = ToolBar<ToolIdentifier>(parent: view)
-
-            let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
-                switch tool.id {
-                case .dismiss:
-                    guard let controller = self else { return }
-                    controller.dismissHandler(controller)
-                }
-            }
-
-            let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
-                switch tool.id {
-                case .dismiss: tool.control.setNeedsDisplay()
-                }
-            }
-            
-            _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
-        }
-
         do { // Respond to orientation changes
 
             // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
@@ -201,6 +177,32 @@ class OverviewDetailController: UIViewController {
 
         detail.centerCoordinate = main.centerCoordinate
         detail.region.span = Double(detail.bounds.height / main.bounds.height) * main.region.span
+
+        showDetail()
+    }
+
+    private func addToolbar() {
+        enum ToolIdentifier {
+            case dismiss
+        }
+
+        let toolBar = ToolBar<ToolIdentifier>(parent: view)
+
+        let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { [weak self] tool in
+            switch tool.id {
+            case .dismiss:
+                guard let controller = self else { return }
+                controller.dismissHandler(controller)
+            }
+        }
+
+        let styleChangeHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
+            switch tool.id {
+            case .dismiss: tool.control.setNeedsDisplay()
+            }
+        }
+        
+        _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
     }
 
     func showDetail(completion: (() -> ())? = nil) {
@@ -208,6 +210,7 @@ class OverviewDetailController: UIViewController {
             self.dualMapsManager.addAnnotation()
             self.dualMapsManager.zoomDetailMap(direction: .in) {
                 self.dualMapsManager.pulseDetailMap() {
+                    self.addToolbar() 
                     completion?()
                 }
             }

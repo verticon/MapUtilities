@@ -77,6 +77,7 @@ class PresentingController: UIViewController {
                     }
 
                     removeMap()
+
                     if Settings.presentAsChild  {
                         var overviewDetalController: OverviewDetailController!
                         overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
@@ -107,7 +108,7 @@ class PresentingController: UIViewController {
                                 controller.dismiss(animated: true, completion: nil)
                             }
                         }
-                        self.present(controller, animated: true) { controller.showDetail() }
+                        self.present(controller, animated: true)
                     }
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
