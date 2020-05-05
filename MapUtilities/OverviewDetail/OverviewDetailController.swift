@@ -181,6 +181,7 @@ class OverviewDetailController: UIViewController {
         showDetail()
     }
 
+    private var toolBar: UIView? = nil
     private func addToolbar() {
         enum ToolIdentifier {
             case dismiss
@@ -192,7 +193,7 @@ class OverviewDetailController: UIViewController {
             switch tool.id {
             case .dismiss:
                 guard let controller = self else { return }
-                controller.dismissHandler(controller)
+                controller.hideDetail() { controller.dismissHandler(controller) }
             }
         }
 
@@ -203,9 +204,11 @@ class OverviewDetailController: UIViewController {
         }
         
         _ = toolBar.add(control: DismissButton(), id: .dismiss, actionHandler: actionHandler, styleChangeHandler: styleChangeHandler)
+
+        self.toolBar = toolBar
     }
 
-    func showDetail(completion: (() -> ())? = nil) {
+    private func showDetail(completion: (() -> ())? = nil) {
         animateSplitter(to: 0) {
             self.dualMapsManager.addAnnotation()
             self.dualMapsManager.zoomDetailMap(direction: .in) {
@@ -217,7 +220,9 @@ class OverviewDetailController: UIViewController {
         }
     }
 
-    func hideDetail(completion: (() -> ())? = nil) {
+    private func hideDetail(completion: (() -> ())? = nil) {
+        if let toolBar = toolBar { toolBar.removeFromSuperview() }
+
         dualMapsManager.removeDetailAnnotation() {
             self.animateSplitter(to: 1) {
                 completion?()

@@ -80,15 +80,13 @@ class PresentingController: UIViewController {
 
                     if Settings.presentAsChild  {
                         var overviewDetalController: OverviewDetailController!
-                        overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
-                            controller.hideDetail {
-                                overviewDetalController.willMove(toParent: nil)
-                                overviewDetalController.view.removeFromSuperview()
-                                overviewDetalController.removeFromParent()
-                                overviewDetalController = nil
+                        overviewDetalController = OverviewDetailController(mainMap: self.map) { _ in
+                            overviewDetalController.willMove(toParent: nil)
+                            overviewDetalController.view.removeFromSuperview()
+                            overviewDetalController.removeFromParent()
+                            overviewDetalController = nil
 
-                                restoreMap()
-                           }
+                            restoreMap()
                         }
                         self.addChild(overviewDetalController)
                         self.view.addSubview(overviewDetalController.view)
@@ -98,17 +96,17 @@ class PresentingController: UIViewController {
                         NSLayoutConstraint.activate(getConstraints(for: overviewDetalController.view))
                     }
                     else {
+                        // Snapshots are used to hide the moving of the MapView from one hierarchy to the other.
+                        // The discrepency shows up during a flip horizontal view controller transition.
                         let snapshot = self.view.snapshotView(afterScreenUpdates: false)
                         if snapshot != nil { self.view.addSubview(snapshot!) }
-                        let controller = OverviewDetailController(mainMap: self.map) { controller in
-                            controller.hideDetail() {
-                                controller.presentSnapshot()
-                                restoreMap()
-                                if let snapshot = snapshot { snapshot.removeFromSuperview() }
-                                controller.dismiss(animated: true, completion: nil)
-                            }
+                        let overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
+                            controller.presentSnapshot()
+                            restoreMap()
+                            if let snapshot = snapshot { snapshot.removeFromSuperview() }
+                            controller.dismiss(animated: true, completion: nil)
                         }
-                        self.present(controller, animated: true)
+                        self.present(overviewDetalController, animated: true)
                     }
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
