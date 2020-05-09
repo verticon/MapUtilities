@@ -8,6 +8,8 @@
 
 import UIKit
 
+let mainWindow = UIApplication.shared.windows.first { $0.isKeyWindow }!
+
 func getOrientation() -> UIDeviceOrientation {
     var orientation = UIDevice.current.orientation
 
@@ -16,8 +18,7 @@ func getOrientation() -> UIDeviceOrientation {
     case .landscapeLeft: break
     case .landscapeRight: break
     default:
-        let window = UIApplication.shared.keyWindow!
-        orientation = window.bounds.width < window.bounds.height ? .portrait : .landscapeLeft
+        orientation = mainWindow.bounds.width < mainWindow.bounds.height ? .portrait : .landscapeLeft
     }
 
     return orientation

@@ -13,117 +13,6 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
-    class SplitView : UIView {
-
-        let upper: UIView
-        let splitter: Splitter
-        let lower: UIView
-        private var currentConstraints: [NSLayoutConstraint]?
-
-        init(main: UIView, detail: UIView) {
-            self.upper = main
-            splitter = Splitter()
-            self.lower = detail
-
-            super.init(frame: .zero)
-
-            backgroundColor = .orange
-
-            main.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(main)
-
-            splitter.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(splitter)
-
-            detail.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(detail)
-        }
-        
-        required init?(coder: NSCoder) { fatalError("OverviewDetailView - init(coder:) has not been implemented") }
-
-        private lazy var potraitConstraints = [
-           upper.topAnchor.constraint(equalTo: self.topAnchor),
-           upper.rightAnchor.constraint(equalTo: self.rightAnchor),
-           upper.bottomAnchor.constraint(equalTo: splitter.topAnchor),
-           upper.leftAnchor.constraint(equalTo: self.leftAnchor),
-
-           splitter.leftAnchor.constraint(equalTo: self.leftAnchor),
-           splitter.rightAnchor.constraint(equalTo: self.rightAnchor),
-           splitter.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-           splitter.heightAnchor.constraint(equalToConstant: Splitter.thickness),
-
-           lower.topAnchor.constraint(equalTo: splitter.bottomAnchor),
-           lower.rightAnchor.constraint(equalTo: self.rightAnchor),
-           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           lower.leftAnchor.constraint(equalTo: self.leftAnchor),
-        ]
-        private lazy var landscapeRightConstraints = [
-           upper.topAnchor.constraint(equalTo: self.topAnchor),
-           upper.rightAnchor.constraint(equalTo: self.rightAnchor),
-           upper.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           upper.leftAnchor.constraint(equalTo: splitter.rightAnchor),
-
-           splitter.topAnchor.constraint(equalTo: self.topAnchor),
-           splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-           splitter.widthAnchor.constraint(equalToConstant: Splitter.thickness),
-
-           lower.topAnchor.constraint(equalTo: self.topAnchor),
-           lower.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           lower.leftAnchor.constraint(equalTo: self.leftAnchor),
-        ]
-        private lazy var landscapeLeftConstraints = [
-           upper.topAnchor.constraint(equalTo: self.topAnchor),
-           upper.rightAnchor.constraint(equalTo: splitter.leftAnchor),
-           upper.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           upper.leftAnchor.constraint(equalTo: self.leftAnchor),
-
-           splitter.topAnchor.constraint(equalTo: self.topAnchor),
-           splitter.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           splitter.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-           splitter.widthAnchor.constraint(equalToConstant: Splitter.thickness),
-
-           lower.topAnchor.constraint(equalTo: self.topAnchor),
-           lower.rightAnchor.constraint(equalTo: self.rightAnchor),
-           lower.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-           lower.leftAnchor.constraint(equalTo: splitter.rightAnchor),
-        ]
-
-        override func layoutSubviews() {
-    
-            if let current = currentConstraints { NSLayoutConstraint.deactivate(current) }
-
-            switch getOrientation() {
-            case .portrait: currentConstraints =  potraitConstraints
-            case .landscapeRight: currentConstraints =  landscapeRightConstraints
-            case .landscapeLeft: currentConstraints =  landscapeLeftConstraints
-            default: fatalError("This shouldn't happen")
-            }
-
-            updateSplitterPosition()
-
-            NSLayoutConstraint.activate(currentConstraints!)
-        }
-
-        // The magnitude of the splitter's offset remains the same in portrait or in landscape; the splitter is always
-        // moving through the device's longer dimension (y in portrait, x in landscape). The sign (+/-) might, however,
-        // change when the orientation changes.
-
-        func updateSplitterPosition() {
-            func getSplitterCenterConstraint() -> NSLayoutConstraint {
-                for constraint in  currentConstraints! {
-                    if constraint.firstItem === splitter && (constraint.firstAttribute == .centerY || constraint.firstAttribute == .centerX) {
-                        return constraint
-                    }
-                }
-                fatalError("No center constraint???")
-            }
-
-            getSplitterCenterConstraint().constant = splitter.offset
-        }
-    }
-
     var dualMapsManager: DualMapsManager!
     private let dismissHandler: (OverviewDetailController) -> Void
 
@@ -139,24 +28,21 @@ class OverviewDetailController: UIViewController {
     }
 
     override func loadView() {
-        let splitView = SplitView(main: dualMapsManager.mainMap, detail: dualMapsManager.detailMap)
-        splitView.splitter.percentOffset = 1
-        view = splitView
+        view = SplitView(upper: dualMapsManager.mainMap, lower: dualMapsManager.detailMap)
     }
 
+    private var splitView: SplitView { return view as! SplitView }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         do { // Respond to orientation changes
 
-            // When coming out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
+            // When moving into or out of portraitUpsideDown iOS does not perform layout (iOS 13). Feels odd ...
             var previousOrientation: UIDeviceOrientation = .unknown
             var notificationObserver: NSObjectProtocol?
             notificationObserver = NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] _ in
-                let newOrientation = UIDevice.current.orientation
-                //print("OverviewDetailController - orientation change notification: \(getOrientation()) (\(newOrientation))")
-
-                guard self != nil else  {
+                guard let controller = self else  {
                     if let observer = notificationObserver {
                         NotificationCenter.default.removeObserver(observer)
                         notificationObserver = nil
@@ -164,21 +50,54 @@ class OverviewDetailController: UIViewController {
                     return
                 }
 
-                if previousOrientation == .portraitUpsideDown { self!.view.setNeedsLayout() }
+                let newOrientation = UIDevice.current.orientation
+                print("OverviewDetailController - orientation changed from \(previousOrientation) to: \(newOrientation))")
+
+                if previousOrientation == .portraitUpsideDown {
+                    print("Previous orientation was upside down; layout needed")
+                    let splitView = controller.view as! SplitView
+                    splitView.splitter.setNeedsLayout()
+                    //splitView.setNeedsLayout()
+                }
+
                 previousOrientation = newOrientation
             }
         }
     }
 
-    // I had A LOT of trouble getting the detail map's initial region to match that of the main map.
-    override func viewDidAppear(_ animated: Bool) {
-        let main = dualMapsManager.mainMap
-        let detail = dualMapsManager.detailMap
+    private var isFirstTime = true
+    override func viewWillLayoutSubviews() {
+        guard isFirstTime else { return }
+        isFirstTime = false
 
-        detail.centerCoordinate = main.centerCoordinate
-        detail.region.span = Double(detail.bounds.height / main.bounds.height) * main.region.span
+        splitView.splitter.percentOffset = 1
+    }
+
+    // I had A LOT of trouble getting the detail map's initial region to match that of the main map.
+    // The difficulty seems to be caused by the fact that the detail map's initial frame is very
+    // small; not sure, it is confusing. The viewDidAppear code is working but I feel shakey about it;
+    // like a change to the app (say in the timing of things) could break it.
+    override func viewDidAppear(_ animated: Bool) {
+
+        func setDetailRegion() {
+            let main = dualMapsManager.mainMap
+            let detail = dualMapsManager.detailMap
+
+            var region = main.region
+            region.span.latitudeDelta = Double(detail.bounds.height / main.bounds.height) * main.region.span.longitudeDelta
+
+            detail.setRegion(region, animated: true)
+        }
+
+        setDetailRegion()
 
         showDetail()
+
+//        Timer.scheduledTimer(withTimeInterval: 2.25, repeats: false) { _ in
+//            UIView.animate(withDuration: 0.5, animations: { setDetailRegion() }, completion: { _ in self.showDetail() })
+//        }
+
+        self.addToolbar()
     }
 
     private var toolBar: UIView? = nil
@@ -234,7 +153,6 @@ class OverviewDetailController: UIViewController {
         guard  let splitView = view as? SplitView else { return }
 
         splitView.splitter.percentOffset = percentOffset
-        splitView.updateSplitterPosition()
         UIView.animate(withDuration: 1,
             animations: { splitView.layoutIfNeeded() }, // The "magic" for animating constraint changes
             completion: { _ in completion?() }
@@ -254,5 +172,4 @@ class OverviewDetailController: UIViewController {
         get { return .flipHorizontal }
         set {}
     }
-
 }

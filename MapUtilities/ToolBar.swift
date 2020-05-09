@@ -89,25 +89,12 @@ class ToolBar<ToolIdentifier> : UIStackView {
             return shape
         }
 
-        func addShadow(to toolbar: ToolBar, using path: CGPath) {
-            toolbar.layer.shadowRadius = 8
-            toolbar.layer.shadowOpacity = 0.2
-            toolbar.layer.shadowOffset = CGSize.init(width: 0, height: 2.5)
-            toolbar.layer.shadowColor = UIColor.black.cgColor
-            toolbar.layer.shadowPath = path
-        }
-
         // ****************************************************************************************************
 
         super.init(frame: CGRect.zero)
 
         let shape = makeShape(with: self.bounds)
         self.layer.insertSublayer(shape, at: 0)
-        addShadow(to: self, using: shape.path!)
-
-        self.layer.borderColor = UIColor.white.cgColor
-        self.layer.borderWidth = 2
-        self.layer.cornerRadius = 5
         
         add(to: parent, inset: inset)
 

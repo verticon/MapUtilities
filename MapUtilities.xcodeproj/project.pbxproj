@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E105E0CE23CBB227007B32C7 /* TestController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = E105E0CD23CBB227007B32C7 /* TestController1.swift */; };
+		E124A92C2461C89600549246 /* SplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E124A92B2461C89600549246 /* SplitView.swift */; };
 		E13C3E3D2458AFB200FE5E9D /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E13C3E3C2458AFB200FE5E9D /* Settings.bundle */; };
 		E1427F0C23817C2A0019C7B5 /* TracksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */; };
 		E1427F0E238180630019C7B5 /* DismissButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1427F0D238180630019C7B5 /* DismissButton.swift */; };
@@ -44,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		E105E0CD23CBB227007B32C7 /* TestController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestController1.swift; sourceTree = "<group>"; };
+		E124A92B2461C89600549246 /* SplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitView.swift; sourceTree = "<group>"; };
 		E13C3E3C2458AFB200FE5E9D /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = Settings.bundle; path = MapUtilities/Settings.bundle; sourceTree = "<group>"; };
 		E1427F0B23817C2A0019C7B5 /* TracksViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TracksViewController.swift; sourceTree = "<group>"; };
 		E1427F0D238180630019C7B5 /* DismissButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissButton.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				E1F8A33A237B11C600977F7C /* DualMapsManager.swift */,
 				E1F8A338237B11C600977F7C /* Splitter.swift */,
 				E1A831EB237AF2E900DAE8CE /* OverviewDetailController.swift */,
+				E124A92B2461C89600549246 /* SplitView.swift */,
 			);
 			path = OverviewDetail;
 			sourceTree = "<group>";
@@ -234,6 +237,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1A831EC237AF2E900DAE8CE /* OverviewDetailController.swift in Sources */,
+				E124A92C2461C89600549246 /* SplitView.swift in Sources */,
 				E1F8A33D237B11C600977F7C /* DualMapsManager.swift in Sources */,
 				E1A831E8237AF2E900DAE8CE /* AppDelegate.swift in Sources */,
 				E105E0CE23CBB227007B32C7 /* TestController1.swift in Sources */,

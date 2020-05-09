@@ -36,10 +36,10 @@ class PresentingController: UIViewController {
         func getConstraints(for: UIView) -> [NSLayoutConstraint] {
             let percentInset: CGFloat = 0.85
             return [
-                `for`.centerXAnchor.constraint(equalToSystemSpacingAfter: view.centerXAnchor, multiplier: 1),
-                `for`.centerYAnchor.constraint(equalToSystemSpacingBelow: view.centerYAnchor, multiplier: 1),
-                `for`.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: percentInset),
-                `for`.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: percentInset)
+                `for`.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                `for`.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                `for`.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: percentInset, constant: 0),
+                `for`.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: percentInset, constant: 0)
             ]
         }
 

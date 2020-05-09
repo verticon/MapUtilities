@@ -24,7 +24,7 @@ class DualMapsManager : NSObject {
     private class DetailMapViewDelegate : NSObject, MKMapViewDelegate {
 
         weak var manager: DualMapsManager!
-        var regionChangeCompletionHandler: (()->())!
+        var regionChangeCompletionHandler: (()->())? = nil
 
         init(manager: DualMapsManager) { self.manager = manager }
 
@@ -255,7 +255,6 @@ class DualMapsManager : NSObject {
     }
 
     private func makeAnnotationView(for: MKAnnotation) -> DetailAnnotationView {
-        print("makeAnnotationView")
         let annotationView = DetailAnnotationView(annotation: `for`)
 
         // Allow the user to reposition the annotation. The Map View utilizes a long press gesture recognizer

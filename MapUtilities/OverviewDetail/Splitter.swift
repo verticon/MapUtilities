@@ -49,23 +49,45 @@ class Splitter: UIView {
     // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
     // ****************************************************************************************************************
 
-    private var isVertical : Bool { superview!.bounds.height > superview!.bounds.width }
-    private var maxDimension : CGFloat { isVertical ? superview!.bounds.height : superview!.bounds.width }
-    private var maxOffset : CGFloat { maxDimension / 2 - 20 }
+    private var parentHeight: CGFloat {
+        guard let superview = superview else {
+            print("Warning: Splitter's superview not yet set.")
+            return 0
+        }
+        if superview.bounds.height == 0 { print("Warning: Bounds of splitter's superview  not yet set.") }
+        return superview.bounds.height
+    }
+    private var parentWidth: CGFloat {
+        guard let superview = superview else {
+            print("Warning: Splitter's superview not yet set.")
+            return 0
+        }
+        if superview.bounds.width == 0 { print("Warning: Bounds of splitter's superview  not yet set.") }
+        return superview.bounds.width
+    }
+    private var isVertical : Bool { parentHeight > parentWidth }
+    private var maxDimension : CGFloat { isVertical ? parentHeight : parentWidth }
+    private let margin: CGFloat = 10 // If 0 then constraint exception. If 2 then some other weird exception
+    private var maxOffset : CGFloat { return maxDimension / 2  - margin }
 
-    private var _percentOffset : CGFloat = 0
+
     var percentOffset : CGFloat { // -1.0 -> 1.0
-        get{ return _percentOffset }
+        get{ return offset / maxOffset }
         set {
-            _percentOffset = newValue
-            if _percentOffset < -1.0 { _percentOffset = -1.0 }
-            else if _percentOffset > 1.0 { _percentOffset = 1.0 }
+            var percent = newValue
+            if abs(percent) > 1 { percent = percent > 1 ? 1 : -1 }
+            offset = percent * maxOffset
         }
     }
 
-    private(set) var offset : CGFloat {
-        get { return percentOffset * maxOffset }
-        set { percentOffset = newValue / maxOffset }
+    // Changes can be detected by observing the offset
+    private var _offset : CGFloat = 0
+    @objc dynamic private(set) var offset : CGFloat {
+        get { return _offset }
+        set {
+            _offset = newValue
+            if abs(_offset) > maxOffset { _offset = offset > maxOffset ? maxOffset : -maxOffset }
+        }
     }
 
     private lazy var handler: (UIPanGestureRecognizer) -> Void = {
@@ -82,12 +104,11 @@ class Splitter: UIView {
 
                 let panGestureDelta = recognizer.translation(in: self.superview)
 
-                let limit = self.maxOffset - TouchView.thickness // Don't drag too close to the edge
+                var limit = self.maxOffset - TouchView.thickness
                 var newOffset = initialOffset + (self.isVertical ? panGestureDelta.y : panGestureDelta.x)
                 if abs(newOffset) > limit { newOffset = newOffset >= 0 ? limit : -limit }
 
                 self.offset = newOffset
-                self.superview?.setNeedsLayout()
 
             default: break
             }
@@ -164,7 +185,6 @@ class Splitter: UIView {
             }
 
             let orientation = getOrientation()
-            //print("SplitterView - Laying out subviews, orientation = \(orientation) (\(UIDevice.current.orientation))")
 
             updateConstraints(orientation)
             updateSign(orientation)
@@ -173,7 +193,10 @@ class Splitter: UIView {
             self.touchView.setNeedsDisplay()
         }
     }()
-    override func layoutSubviews() { layout() }
+    override func layoutSubviews() {
+        layout()
+        print("Splitter.layoutSubviews - Orientation = \(getOrientation())(\(UIDevice.current.orientation)). Offset = \(offset)")
+    }
 }
 
 // We want the splitter view to be thin. This makes it difficult to touch.
