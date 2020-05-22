@@ -12,6 +12,8 @@ import VerticonsToolbox
 
 class PresentingController: UIViewController {
 
+    private class TransitionView : UIView {}
+
     private class Settings {
         struct Keys {
             static let child = "ChildPreference"
@@ -26,29 +28,42 @@ class PresentingController: UIViewController {
         }
     }
 
+    private let transitionView = TransitionView()
     private let map = MKMapView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .lightGray
+
         Settings.setup()
 
-        func getConstraints(for: UIView) -> [NSLayoutConstraint] {
-            let percentInset: CGFloat = 0.85
+        view.backgroundColor = .lightGray
+
+        transitionView.translatesAutoresizingMaskIntoConstraints = false
+        //transitionView.backgroundColor = .orange
+        view.addSubview(transitionView)
+        let percentFill: CGFloat = 0.85
+        NSLayoutConstraint.activate([
+            transitionView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            transitionView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            transitionView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: percentFill, constant: 0),
+            transitionView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: percentFill, constant: 0)
+        ])
+
+        func makeConstraints(for: UIView) -> [NSLayoutConstraint] {
             return [
-                `for`.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                `for`.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                `for`.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: percentInset, constant: 0),
-                `for`.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: percentInset, constant: 0)
+                `for`.centerXAnchor.constraint(equalTo: transitionView.centerXAnchor),
+                `for`.centerYAnchor.constraint(equalTo: transitionView.centerYAnchor),
+                `for`.heightAnchor.constraint(equalTo: transitionView.heightAnchor),
+                `for`.widthAnchor.constraint(equalTo: transitionView.widthAnchor)
             ]
         }
 
-        map.delegate = self
         map.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(map)
-        let mapConstraints = getConstraints(for: map)
+        transitionView.addSubview(map)
+        let mapConstraints = makeConstraints(for: map)
         NSLayoutConstraint.activate(mapConstraints)
 
+        map.delegate = self
 
         do { // Add the toolBar last so that it is on top.
 
@@ -58,52 +73,81 @@ class PresentingController: UIViewController {
                 case test
             }
 
-            let toolBar = ToolBar<ToolIdentifier>(parent: map)
+            let toolBar = ToolBar<ToolIdentifier>(parent: transitionView)
 
             let actionHandler: ToolBar<ToolIdentifier>.EventHandler = { tool in
                 switch tool.id {
                 case .overviewDetail:
 
+                    // removeFromSuperview() is suppossed to deactivate constraints but the debugger shows otherwise???
+
                     func removeMap() {
-                        toolBar.removeFromSuperview()
-                        self.map.removeFromSuperview() // Constraints are deactivated
+                        toolBar.isHidden = true
+ 
+                        self.map.removeFromSuperview()
+                        //NSLayoutConstraint.deactivate(self.map.constraints)
                     }
 
                     func restoreMap() {
-                        self.map.removeFromSuperview() // Constraints are deactivated
-                        self.view.addSubview(self.map)
+                        self.map.removeFromSuperview()
+                        //NSLayoutConstraint.deactivate(self.map.constraints)
+                        self.transitionView.addSubview(self.map)
                         NSLayoutConstraint.activate(mapConstraints)
-                        toolBar.add(to: self.map)
+
+                        toolBar.isHidden = false
+                        self.transitionView.bringSubviewToFront(toolBar)
                     }
 
-                    removeMap()
+                    // Snapshots are used to hide the hand off of the MapView from one controller to the other.
+                    // During a flip horizontal transition, the from controller's view has a blnak area where
+                    // where the map had been. The snapshot hides this..
 
                     if Settings.presentAsChild  {
-                        var overviewDetalController: OverviewDetailController!
-                        overviewDetalController = OverviewDetailController(mainMap: self.map) { _ in
-                            overviewDetalController.willMove(toParent: nil)
-                            overviewDetalController.view.removeFromSuperview()
-                            overviewDetalController.removeFromParent()
-                            overviewDetalController = nil
+                        var snapshot = self.map.snapshotView(afterScreenUpdates: false)
+
+                        removeMap()
+
+                        let overviewDetailController = OverviewDetailController(mainMap: self.map, snapshot: snapshot) { controller in
+                            snapshot = controller.view.snapshotView(afterScreenUpdates: false)
+
+                            controller.willMove(toParent: nil)
+                            controller.view.removeFromSuperview()
+                            controller.removeFromParent()
 
                             restoreMap()
-                        }
-                        self.addChild(overviewDetalController)
-                        self.view.addSubview(overviewDetalController.view)
-                        overviewDetalController.didMove(toParent: self)
 
-                        overviewDetalController.view.translatesAutoresizingMaskIntoConstraints = false
-                        NSLayoutConstraint.activate(getConstraints(for: overviewDetalController.view))
+                            if let snapshot = snapshot {
+                                self.map.isHidden = true
+                                self.transitionView.addSubview(snapshot)
+                                snapshot.translatesAutoresizingMaskIntoConstraints = false
+                                NSLayoutConstraint.activate(makeConstraints(for: snapshot))
+
+                                // For some reason that I do not yet understand, the UIView.transition would not function quite right if executed directly here
+                                // Also, during the flip, the super view (i.e.the TransitionView) is not being shown as I expect. This can be observed by setting
+                                // the transition view's background color
+                                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { _ in
+                                    UIView.transition(from: snapshot, to: self.map, duration: 1, options: [.transitionFlipFromLeft, .showHideTransitionViews])
+                                }
+                            }
+                        }
+
+                        self.addChild(overviewDetailController)
+                        self.view.addSubview(overviewDetailController.view)
+                        overviewDetailController.didMove(toParent: self)
+
+                        overviewDetailController.view.translatesAutoresizingMaskIntoConstraints = false
+                        NSLayoutConstraint.activate(makeConstraints(for: overviewDetailController.view))
                     }
                     else {
-                        // Snapshots are used to hide the moving of the MapView from one hierarchy to the other.
-                        // The discrepency shows up during a flip horizontal view controller transition.
                         let snapshot = self.view.snapshotView(afterScreenUpdates: false)
                         if snapshot != nil { self.view.addSubview(snapshot!) }
+
+                        removeMap()
+
                         let overviewDetalController = OverviewDetailController(mainMap: self.map) { controller in
-                            controller.presentSnapshot()
+                            controller.presentSnapshot(nil)
                             restoreMap()
-                            if let snapshot = snapshot { snapshot.removeFromSuperview() }
+                            if snapshot != nil { snapshot!.removeFromSuperview() }
                             controller.dismiss(animated: true, completion: nil)
                         }
                         self.present(overviewDetalController, animated: true)
@@ -111,7 +155,7 @@ class PresentingController: UIViewController {
 
                 case .tracks: self.present(TracksController(initialOverviewRegion: self.map.region), animated: true)
 
-                case .test: self.present(TestController2(), animated: true)
+                case .test: self.present(TestController4(), animated: true)
                 }
             }
 
@@ -178,5 +222,4 @@ class PresentingController: UIViewController {
     }
 }
 
-extension PresentingController : MKMapViewDelegate {
-}
+extension PresentingController : MKMapViewDelegate {}

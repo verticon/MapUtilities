@@ -165,6 +165,32 @@ class TestController2 : UIViewController {
  
         let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapHandler))
         (view as? TestView)?.subView.addGestureRecognizer(recognizer)
+
+        report("viewDidLoad")
+    }
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        report("viewWillLayoutSubviews")
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        report("viewDidLayoutSubviews")
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        report("viewWillAppear")
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        report("viewDidAppear")
+    }
+
+    private func report(_ header: String) {
+        guard let testView = view as? TestView else { return }
+        print("\n\(header)")
+        print("\tView:    \(testView.bounds)")
+        print("\tSubView: \(testView.subView.bounds)")
     }
 
     @objc private func tapHandler(_ recognizer: UITapGestureRecognizer) {

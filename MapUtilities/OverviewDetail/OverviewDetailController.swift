@@ -13,12 +13,19 @@ import VerticonsToolbox
 
 class OverviewDetailController: UIViewController {
 
+    class TransistionView : UIView {}
+
     var dualMapsManager: DualMapsManager!
     private let dismissHandler: (OverviewDetailController) -> Void
+    private let snapshot: UIView?
+    private let splitView: SplitView
 
-    init(mainMap: MKMapView, dismissHandler: @escaping (OverviewDetailController) -> Void) {
-        self.dismissHandler = dismissHandler
+    init(mainMap: MKMapView, snapshot: UIView? = nil, dismissHandler: @escaping (OverviewDetailController) -> Void) {
         dualMapsManager = DualMapsManager(mainMap: mainMap)
+        self.snapshot = snapshot
+        self.dismissHandler = dismissHandler
+
+        splitView = SplitView(upper: dualMapsManager.mainMap, lower: dualMapsManager.detailMap)
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -28,10 +35,32 @@ class OverviewDetailController: UIViewController {
     }
 
     override func loadView() {
-        view = SplitView(upper: dualMapsManager.mainMap, lower: dualMapsManager.detailMap)
-    }
+        if let snapshot = snapshot {
+            view = TransistionView()
 
-    private var splitView: SplitView { return view as! SplitView }
+            snapshot.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(snapshot)
+            NSLayoutConstraint.activate([
+                snapshot.leftAnchor.constraint(equalTo: view.leftAnchor),
+                snapshot.rightAnchor.constraint(equalTo: view.rightAnchor),
+                snapshot.topAnchor.constraint(equalTo: view.topAnchor),
+                snapshot.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
+
+            splitView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(splitView)
+            NSLayoutConstraint.activate([
+                splitView.leftAnchor.constraint(equalTo: view.leftAnchor),
+                splitView.rightAnchor.constraint(equalTo: view.rightAnchor),
+                splitView.topAnchor.constraint(equalTo: view.topAnchor),
+                splitView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
+            splitView.isHidden = true
+        }
+        else {
+            view = splitView
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,39 +94,39 @@ class OverviewDetailController: UIViewController {
         }
     }
 
+    // Had to wait for Did instead of Will to ensure that the split view's
+    // bounds had been set prior to any attempts to alter the splitter's position.
     private var isFirstTime = true
-    override func viewWillLayoutSubviews() {
+    override func viewDidLayoutSubviews() {
         guard isFirstTime else { return }
         isFirstTime = false
-
         splitView.splitter.percentOffset = 1
+        setDetailRegion()
     }
 
     // I had A LOT of trouble getting the detail map's initial region to match that of the main map.
-    // The difficulty seems to be caused by the fact that the detail map's initial frame is very
-    // small; not sure, it is confusing. The viewDidAppear code is working but I feel shakey about it;
-    // like a change to the app (say in the timing of things) could break it.
+    // As the splitter is animated up the detail should match the main. Then the detail is zoomed.
+
+    private func setDetailRegion() {
+        let main = dualMapsManager.mainMap
+        let detail = dualMapsManager.detailMap
+
+        var region = main.region
+        region.span.latitudeDelta = Double(detail.bounds.height / main.bounds.height) * main.region.span.latitudeDelta
+        region.span.longitudeDelta = Double(detail.bounds.width / main.bounds.width) * main.region.span.longitudeDelta
+
+        detail.setRegion(region, animated: true)
+    }
+
     override func viewDidAppear(_ animated: Bool) {
 
-        func setDetailRegion() {
-            let main = dualMapsManager.mainMap
-            let detail = dualMapsManager.detailMap
-
-            var region = main.region
-            region.span.latitudeDelta = Double(detail.bounds.height / main.bounds.height) * main.region.span.longitudeDelta
-
-            detail.setRegion(region, animated: true)
-        }
-
-        setDetailRegion()
+        super.viewDidAppear(animated)
 
         showDetail()
 
 //        Timer.scheduledTimer(withTimeInterval: 2.25, repeats: false) { _ in
 //            UIView.animate(withDuration: 0.5, animations: { setDetailRegion() }, completion: { _ in self.showDetail() })
 //        }
-
-        self.addToolbar()
     }
 
     private var toolBar: UIView? = nil
@@ -128,15 +157,26 @@ class OverviewDetailController: UIViewController {
     }
 
     private func showDetail(completion: (() -> ())? = nil) {
-        animateSplitter(to: 0) {
-            self.dualMapsManager.addAnnotation()
-            self.dualMapsManager.zoomDetailMap(direction: .in) {
-                self.dualMapsManager.pulseDetailMap() {
-                    self.addToolbar() 
-                    completion?()
+        let isUserLocationVisible = dualMapsManager.mainMap.isUserLocationVisible
+        self.dualMapsManager.mainMap.showsUserLocation = false
+
+        func finish() {
+            animateSplitter(to: 0) {
+                self.dualMapsManager.addAnnotation()
+                self.dualMapsManager.zoomDetailMap(direction: .in) {
+                    self.dualMapsManager.pulseDetailMap() {
+                        self.addToolbar()
+                        completion?()
+                        self.dualMapsManager.mainMap.showsUserLocation = isUserLocationVisible
+                    }
                 }
             }
         }
+
+        if let transition = snapshot {
+            UIView.transition(from: transition, to: splitView, duration: 1, options: [.transitionFlipFromRight, .showHideTransitionViews]) { _ in finish() }
+        }
+        else { finish() }
     }
 
     private func hideDetail(completion: (() -> ())? = nil) {
@@ -150,17 +190,17 @@ class OverviewDetailController: UIViewController {
     }
 
     private func animateSplitter(to percentOffset: CGFloat, completion: (() -> ())? = nil) {
-        guard  let splitView = view as? SplitView else { return }
-
         splitView.splitter.percentOffset = percentOffset
         UIView.animate(withDuration: 1,
-            animations: { splitView.layoutIfNeeded() }, // The "magic" for animating constraint changes
+            animations: { self.splitView.layoutIfNeeded() }, // The "magic" for animating constraint changes
             completion: { _ in completion?() }
         )
     }
 
-    func presentSnapshot() {
-        if let snapshot = self.view.snapshotView(afterScreenUpdates: false) { view = snapshot }
+    func presentSnapshot(_ snapshot: UIView?) {
+        if let snapshot = snapshot ?? self.view.snapshotView(afterScreenUpdates: false) {
+             view = snapshot
+        }
     }
 
     override var modalPresentationStyle: UIModalPresentationStyle {

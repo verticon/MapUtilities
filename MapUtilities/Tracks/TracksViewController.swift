@@ -280,7 +280,7 @@ class TracksController: UIViewController {
         pathAnnotation.title = distanceText
         pathAnnotation.subtitle = pathAnnotation.coordinate.description
         
-        if !mapView.annotations.reduce(false){ $0 || $1 === tapAnnotation } {
+        if !mapView.annotations.reduce(false, { $0 || $1 === tapAnnotation }) {
             mapView.addAnnotation(tapAnnotation)
             mapView.addAnnotation(pathAnnotation)
         }

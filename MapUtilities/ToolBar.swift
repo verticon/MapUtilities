@@ -108,15 +108,21 @@ class ToolBar<ToolIdentifier> : UIStackView {
 
     func add(to: UIView, inset: CGFloat = 20) {
         self.removeFromSuperview()
+        NSLayoutConstraint.deactivate(self.constraints)
+
         self.translatesAutoresizingMaskIntoConstraints = false
         to.addSubview(self)
 
-        NSLayoutConstraint.activate( [
-            self.topAnchor.constraint(equalTo: to.safeAreaLayoutGuide.topAnchor, constant: inset),
-            self.rightAnchor.constraint(equalTo: to.safeAreaLayoutGuide.rightAnchor, constant: -inset),
-            self.widthAnchor.constraint(equalToConstant: 35),
-            self.heightAnchor.constraint(equalToConstant:  35)
-       ])
+        NSLayoutConstraint.activate(makeConstraints(for: to, inset: inset))
+    }
+
+    func makeConstraints(for: UIView, inset: CGFloat = 20) -> [NSLayoutConstraint] {
+         return [
+             self.topAnchor.constraint(equalTo: `for`.safeAreaLayoutGuide.topAnchor, constant: inset),
+             self.rightAnchor.constraint(equalTo: `for`.safeAreaLayoutGuide.rightAnchor, constant: -inset),
+             self.widthAnchor.constraint(equalToConstant: 35),
+             self.heightAnchor.constraint(equalToConstant:  35)
+        ]
     }
 
     func add(control: UIControl, id: ToolIdentifier, actionHandler: @escaping EventHandler, styleChangeHandler: @escaping EventHandler) -> AnyTool<ToolIdentifier> {

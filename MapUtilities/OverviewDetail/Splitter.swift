@@ -49,12 +49,15 @@ class Splitter: UIView {
     // Reposition the slider, either top to bottom or left to right, by updating the center constraint's constant.
     // ****************************************************************************************************************
 
+    private var firstTime = true
     private var parentHeight: CGFloat {
         guard let superview = superview else {
             print("Warning: Splitter's superview not yet set.")
             return 0
         }
-        if superview.bounds.height == 0 { print("Warning: Bounds of splitter's superview  not yet set.") }
+        if superview.bounds.height == 0 {
+            print("Warning: Height of splitter's superview  not yet set.")
+        }
         return superview.bounds.height
     }
     private var parentWidth: CGFloat {
@@ -62,7 +65,17 @@ class Splitter: UIView {
             print("Warning: Splitter's superview not yet set.")
             return 0
         }
-        if superview.bounds.width == 0 { print("Warning: Bounds of splitter's superview  not yet set.") }
+        if superview.bounds.width == 0 {
+            print("Warning: Width of splitter's superview  not yet set.")
+            if firstTime {
+                firstTime = false
+                var v: UIView? = superview
+                repeat {
+                    print("\(String(describing: v))")
+                    v = v?.superview
+                } while v != nil
+            }
+        }
         return superview.bounds.width
     }
     private var isVertical : Bool { parentHeight > parentWidth }
