@@ -84,9 +84,7 @@ class OverviewDetailController: UIViewController {
 
                 if previousOrientation == .portraitUpsideDown {
                     print("Previous orientation was upside down; layout needed")
-                    let splitView = controller.view as! SplitView
-                    splitView.splitter.setNeedsLayout()
-                    //splitView.setNeedsLayout()
+                    controller.splitView.splitter.setNeedsLayout()
                 }
 
                 previousOrientation = newOrientation
@@ -183,7 +181,8 @@ class OverviewDetailController: UIViewController {
         if let toolBar = toolBar { toolBar.removeFromSuperview() }
 
         dualMapsManager.removeDetailAnnotation() {
-            self.animateSplitter(to: 1) {
+            let position: CGFloat = getOrientation() == .landscapeRight ? -1 : 1
+            self.animateSplitter(to: position) {
                 completion?()
             }
         }
